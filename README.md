@@ -1,5 +1,6 @@
 # 🐞 Bughunting Automation Installer
-
+```bash
+~>  sudo python3 huntools.py
  __  __     __  __     __   __     ______   ______   ______     ______     __         ______    
 /\ \_\ \   /\ \/\ \   /\ "-.\ \   /\__  _\ /\__  _\ /\  __ \   /\  __ \   /\ \       /\  ___\   
 \ \  __ \  \ \ \_\ \  \ \ \-.  \  \/_/\ \/ \/_/\ \/ \ \ \/\ \  \ \ \/\ \  \ \ \____  \ \___  \  
@@ -10,6 +11,26 @@
 
 A lightweight Python automation script to install essential tools for bug bounty and penetration testing via APT or GitHub clone fallback — with smart checks and status reporting.
 
+[*] Starting tool installation process...
+
+[6%] Checking seclists (1/15)
+[+] seclists is already installed.
+
+[13%] Checking jq (2/15)
+[+] jq is already installed.
+
+
+Summary:
+  Installed via APT or already present: 15
+  Installed manually from GitHub: 0
+  Failed to install: 0
+
+[✓] All tools checked and processed.
+
+Summary: 15 tool(s) installed via APT or already present.
+         0 tool(s) cloned from GitHub.
+~ >                                        
+```
 ---
 
 ## 🚀 Features
