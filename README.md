@@ -1,4 +1,5 @@
-
+<h1 align="center">🐞 Huntools</h1>
+<br>
 <p align="center">
     <a href="https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2Fl0n3m4n%2FSearchToolkit">
         <img src="https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2Fl0n3m4n%2Fbughunting-automation&label=Visitors&countColor=%2337d67a" />
@@ -18,7 +19,6 @@
 </p>
 <br/>
 
-# 🐞 Bughunting Automation Installer
 ```bash
 ~>  sudo python3 huntools.py
  __  __     __  __     __   __     ______   ______   ______     ______     __         ______    
