@@ -39,6 +39,9 @@ A lightweight Python automation script to install essential tools for bug bounty
 [13%] Checking jq (2/15)
 [+] jq is already installed.
 
+[100%] Checking shodan (15/15)
+[+] shodan is already installed.
+
 
 Summary:
   Installed via APT or already present: 15
@@ -49,7 +52,7 @@ Summary:
 
 Summary: 15 tool(s) installed via APT or already present.
          0 tool(s) cloned from GitHub.
-~ >                                        
+~>                                        
 ```
 ---
 
