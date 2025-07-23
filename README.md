@@ -1,2 +1,67 @@
-# bughunting-automation
-This script automates the setup process for bughunting by installing all the essential tools at once. 
+# 🐞 Bughunting Automation Installer
+
+ __  __     __  __     __   __     ______   ______   ______     ______     __         ______    
+/\ \_\ \   /\ \/\ \   /\ "-.\ \   /\__  _\ /\__  _\ /\  __ \   /\  __ \   /\ \       /\  ___\   
+\ \  __ \  \ \ \_\ \  \ \ \-.  \  \/_/\ \/ \/_/\ \/ \ \ \/\ \  \ \ \/\ \  \ \ \____  \ \___  \  
+ \ \_\ \_\  \ \_____\  \ \_\\"\_\    \ \_\    \ \_\  \ \_____\  \ \_____\  \ \_____\  \/\_____\ 
+  \/_/\/_/   \/_____/   \/_/ \/_/     \/_/     \/_/   \/_____/   \/_____/   \/_____/   \/_____/ 
+                                                                                                                      
+            Author: l0n3m4n | Version: 1.0.0 | Bughunting Automation Installer 
+
+A lightweight Python automation script to install essential tools for bug bounty and penetration testing via APT or GitHub clone fallback — with smart checks and status reporting.
+
+---
+
+## 🚀 Features
+
+- ✅ One-line install for multiple tools
+- 📦 Installs via APT where available
+- 🌐 Falls back to GitHub repo clone if APT fails
+- 🔍 Skips if the tool already exists or is cloned under `/opt`
+- 🧠 Detects and counts APT-installed and manually-installed tools
+- 🔐 Supports GitHub token to avoid API rate limits
+
+---
+
+## 🧰 Tools Included
+
+- `seclists`
+- `jq`
+- `ffuf`
+- `gobuster`
+- `feroxbuster`
+- `katana`
+- `flameshot`
+- `lsd`
+- `subfinder`
+- `assetfinder`
+- `aquatone`
+- `gau`
+- `waybackurls`
+- `OneForAll`
+
+---
+
+## 📦 Installation
+
+1. **Clone the repository:**
+
+```bash
+git clone https://github.com/yourusername/bughunting-installer.git
+cd bughunting-installer
+sudo python3 bughunting.py
+```
+## 🔐 GitHub Token (Optional)
+
+Set a GitHub token to avoid API rate limits during repo searches:
+```
+export GITHUB_TOKEN=ghp_yourtokenhere
+```
+You can create one at: https://github.com/settings/tokens
+
+## 🙌 Contributing
+Pull requests are welcome! If you'd like to contribute tools or improvements, feel free to fork and submit a PR.
+
+📣 Disclaimer
+
+This tool is provided as-is for educational and lawful bug bounty purposes. Use it responsibly and only on systems you own or have explicit permission to test.
