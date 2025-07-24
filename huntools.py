@@ -5,6 +5,7 @@ import os
 import sys
 import requests
 import shutil
+import signal
 
 # ====== Config ======
 REQUIRED_TOOLS = [
@@ -33,7 +34,7 @@ def show_banner():
  \ \_\ \_\  \ \_____\  \ \_\\"\_\    \ \_\    \ \_\  \ \_____\  \ \_____\  \ \_____\  \/\_____\ 
   \/_/\/_/   \/_____/   \/_/ \/_/     \/_/     \/_/   \/_____/   \/_____/   \/_____/   \/_____/ 
                                                                                                                       
-              Author: l0n3m4n | Version: 1.0.0 | Bughunting Automation Installer 
+              Author: l0n3m4n | Version: v1.0.1 | Bughunting Automation Installer 
     """, BLUE)
 
 # ====== Utilities ======
@@ -129,6 +130,19 @@ def handle_tool_installation(tool):
     else:
         print_colored(f"[✗] No repo found for {tool}. Skipping.\n", RED)
         return "failed"
+
+
+# ====== Handle user interruption (Ctrl+C or Ctrl+Z) ======
+def signal_handler(sig, frame):
+    if sig == signal.SIGINT:
+        print_colored("\n[!] Script interrupted by user (Ctrl+C). Exiting...", RED)
+    elif sig == signal.SIGTSTP:
+        print_colored("\n[!] Script suspended by user (Ctrl+Z). Exiting...", RED)
+    sys.exit(1)
+
+# Register signal handlers
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTSTP, signal_handler)
 
 
 
