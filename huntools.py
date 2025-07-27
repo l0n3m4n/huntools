@@ -9,7 +9,7 @@
 
     # ====== Config ======
     REQUIRED_TOOLS = [
-        "seclists", "jq", "ffuf", "gobuster", "feroxbuster", "katana",
+        "seclists", "jq", "ffuf", "gobuster", "feroxbuster", "katana", "LinkFinder",
         "flameshot", "lsd", "subfinder", "assetfinder", "aquatone",
         "gau", "waybackurls", "OneForAll", "shodan"
     ]
