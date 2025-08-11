@@ -11,7 +11,10 @@ import signal
 REQUIRED_TOOLS = [
     "seclists", "jq", "ffuf", "feroxbuster", "katana", "LinkFinder",
     "flameshot", "lsd", "subfinder", "assetfinder", "aquatone",
-    "gau", "waybackurls", "OneForAll", "shodan"
+    "gau", "waybackurls", "OneForAll", "shodan", "Amass", "Sublist3r",
+    "Assetfinder", "httpx", "GoSpider", "Subdomainizer", "CeWL", "ShuffleDNS",
+    "Nuclei", "CTL", "DNSx", "Cloud Enum", "Metabigor", "Github Recon", "Naabu",
+    "Censys"
 ]
 
 INSTALL_DIR = "/opt"
