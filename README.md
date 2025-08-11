@@ -103,6 +103,10 @@ export GITHUB_TOKEN=ghp_yourtokenhere
 ```
 You can create one at: https://github.com/settings/tokens
 
+## 📋 TODO 
+- [ ] Dockerfile   
+
+
 ## 🙌 Contributing
 Pull requests are welcome! If you'd like to contribute tools or improvements, feel free to fork and submit a PR.
 

@@ -36,7 +36,7 @@ __  __     __  __     __   __     ______   ______   ______     ______     __    
  \ \_\ \_\  \ \_____\  \ \_\\"\_\    \ \_\    \ \_\  \ \_____\  \ \_____\  \ \_____\  \/\_____\ 
   \/_/\/_/   \/_____/   \/_/ \/_/     \/_/     \/_/   \/_____/   \/_____/   \/_____/   \/_____/ 
 
-        Author: l0n3m4n | Version: v1.0.1 | Bughunting Automation Installer 
+        Author: l0n3m4n | Version: v1.0.2 | Bughunting Automation Installer 
     """, BLUE)
 
 # ====== Utilities ======
@@ -119,16 +119,11 @@ def handle_tool_installation(tool):
 
     repo_url = search_github_repo(tool)
     if repo_url:
-        confirm = input(f"    Clone this repo for {tool}? (y/N): ").strip().lower()
-        if confirm == "y":
-            if clone_github_repo(tool, repo_url):
-                return "manual"
-            else:
-                print_colored(f"[✗] Failed to clone {tool}.\n", RED)
-                return "failed"
+        if clone_github_repo(tool, repo_url):
+            return "manual"
         else:
-            print_colored(f"[-] Skipping GitHub install for {tool}.\n", YELLOW)
-            return "skipped"
+            print_colored(f"[✗] Failed to clone {tool}.\n", RED)
+            return "failed"
     else:
         print_colored(f"[✗] No repo found for {tool}. Skipping.\n", RED)
         return "failed"
