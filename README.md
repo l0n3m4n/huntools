@@ -91,9 +91,9 @@ Summary: 15 tool(s) installed via APT or already present.
 1. **Clone the repository:**
 
 ```bash
-git clone https://github.com/yourusername/bughunting-installer.git
-cd bughunting-installer
-sudo python3 bughunting.py
+git clone https://github.com/l0n3m4n/huntools.git
+cd huntools
+sudo python3 huntools.py 
 ```
 ## 🔐 GitHub Token (Optional)
 
