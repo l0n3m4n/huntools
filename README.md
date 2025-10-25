@@ -1,4 +1,4 @@
-<h1 align="center"><img src="logo.gif" alt="Huntools Logo" width="30"/> Huntools</h1>
+<h1 align="center"><img src="logo.gif" alt="Huntools Logo" width="25"/> Huntools</h1>
 
 <br>
  
