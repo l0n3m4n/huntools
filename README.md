@@ -106,11 +106,8 @@ Available commands:
 
 ### 🚀 Step 1: Initial Setup & Installation
 
-First, ensure Huntools is ready to go.
-
 1.  **Clone the Huntools Repository:**
     
-    If you haven't already, get the Huntools script:
     ```bash
     git clone https://github.com/l0n3m4n/huntools.git
     cd huntools
