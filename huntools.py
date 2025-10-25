@@ -45,6 +45,7 @@ def show_banner():
 
 # Tool lists
 ALL_TOOLS = {
+    
     # Go Tools
     "ffuf": {"type": "go", "install": "go install -v github.com/ffuf/ffuf/v2@latest"},
     "feroxbuster": {"type": "go", "install": "go install -v github.com/epi052/feroxbuster@latest"},
@@ -479,7 +480,7 @@ def install_single(tool_name):
 
     if tool_name not in ALL_TOOLS:
         print(f"\n{Colors.RED}Error: Tool '{tool_name}' not found.{Colors.NC}")
-        print(f"{Colors.YELLOW}Please make sure you have spelled the tool name correctly, or run 'huntools display --all' to see the list of available tools.{Colors.NC}\n")
+        print(f"{Colors.YELLOW}run 'huntools display -a' to see the list of available tools.{Colors.NC}\n")
         return
 
     existing_path = shutil.which(tool_name)
@@ -588,7 +589,7 @@ def update_single(tool_name):
 
     if tool_name not in ALL_TOOLS:
         print(f"\n{Colors.RED}Error: Tool '{tool_name}' not found.{Colors.NC}")
-        print(f"{Colors.YELLOW}Please make sure you have spelled the tool name correctly, or run 'huntools display --all' to see the list of available tools.{Colors.NC}\n")
+        print(f"{Colors.YELLOW} run 'huntools display --all' to see the list of available tools.{Colors.NC}\n")
         return
 
     tool = ALL_TOOLS[tool_name]
@@ -654,7 +655,7 @@ def remove_single(tool_name):
 
     if tool_name not in ALL_TOOLS:
         print(f"\n{Colors.RED}Error: Tool '{tool_name}' not found.{Colors.NC}")
-        print(f"{Colors.YELLOW}Please make sure you have spelled the tool name correctly, or run 'huntools display --all' to see the list of available tools.{Colors.NC}\n")
+        print(f"{Colors.YELLOW} run 'huntools display --all' to see the list of available tools.{Colors.NC}\n")
         return
 
     tool = ALL_TOOLS[tool_name]
