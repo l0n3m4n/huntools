@@ -11,7 +11,6 @@ import hashlib
 
 
 
-# Colors
 class Colors:
     BLUE = '''\033[1;34m'''
     NC = '''\033[0m'''
@@ -43,7 +42,7 @@ def show_banner():
 
 
 
-# Master Tool List
+# Master Tool List: You can add more tools here as needed, and you can delete tools you don't want to install
 ALL_TOOLS = {
     
     # Go Tools
@@ -558,35 +557,27 @@ def display_all():
     try:
         terminal_width = os.get_terminal_size().columns
     except OSError:
-        terminal_width = 80  # Default width if not running in a proper terminal
+        terminal_width = 80  
     max_len = max(len(tool) for tool in all_tools)
 
-    # Calculate a base width for each tool entry: "- " + tool_name + "  " (separator)
-    # The max_len ensures all tool names in a column are aligned
-    base_entry_width = max_len + 2 # For "- " prefix
-    
-    # Determine how many columns can fit
-    # We need at least 2 spaces between columns for readability
+    base_entry_width = max_len + 2
     min_column_spacing = 2
     
-    # Calculate the effective width needed per column including the separator
+
     effective_column_width = base_entry_width + min_column_spacing
 
     num_columns = max(1, terminal_width // effective_column_width)
     
-    # If only one column, ensure it doesn't take up the whole width unnecessarily
     if num_columns == 1:
-        # Just print one per line, no need for complex spacing
         for tool in all_tools:
             print(f"{Colors.GREEN}- {tool}{Colors.NC}")
         return
 
-    # Print tools in columns
+    # tools in columns
     for i in range(0, len(all_tools), num_columns):
         row_tools = all_tools[i:i + num_columns]
         row_output_parts = []
         for tool in row_tools:
-            # Pad each tool name to max_len for alignment, then add color and prefix
             row_output_parts.append(f"{Colors.GREEN}- {tool:<{max_len}}{Colors.NC}")
         
         # Join parts with the minimum column spacing
@@ -604,7 +595,7 @@ def checking_health():
         
         is_installed = False
         
-        # First, check if the tool is in the PATH
+        # check if the tool is in the PATH
         tool_path = shutil.which(tool_name)
         if tool_path:
             print(f"  - {tool_name}: {Colors.GREEN}Installed{Colors.NC} {Colors.YELLOW}(at {tool_path}){Colors.NC}")
@@ -993,6 +984,8 @@ CMD ["bash"]
     else:
         print(dockerfile_content)
 
+
+# Main function to parse arguments and execute commands 
 def main():
     try:
         show_banner()

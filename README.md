@@ -58,7 +58,7 @@ for critical operations.
 
 usage: huntools <command> [flags]
 
-A streamlined tool for managing your bug hunting arsenal.
+A streamlined tool for managing your hunting arsenal.
 
 options:
   -h, --help   show this help message and exit
