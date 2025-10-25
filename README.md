@@ -1,8 +1,9 @@
 <h1 align="center">🐞 Huntools</h1>
 <br>
+ 
 <p align="center">
-    <a href="https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2Fl0n3m4n%2FSearchToolkit">
-        <img src="https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2Fl0n3m4m%2Fh&label=Visitors&countColor=%2337d67a" />
+    <a href="https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2Fl0n3m4n%2Fhuntools">
+        <img src="https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2Fl0n3m4n%2Fhuntools&label=Visitors&countColor=%2337d67a" />
     </a>
     <a href="https://www.facebook.com/UEVOLVJU">
         <img src="https://img.shields.io/badge/Facebook-%231877F2.svg?style=for-the-badge&logo=Facebook&logoColor=white" alt="Facebook">
@@ -12,12 +13,16 @@
     </a>
     <a href="https://medium.com/@l0n3m4n">
         <img src="https://img.shields.io/badge/Medium-12100E?style=for-the-badge&logo=medium&logoColor=white" alt="Medium">
-    </a> 
+    </a>
+    <a href="https://www.buymeacoffee.com/l0n3m4n">
+        <img src="https://img.shields.io/badge/Buy%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me a Coffee">
+    </a>  
     <a href="mailto:l0n3m4n@proton.me">
       <img src="https://img.shields.io/badge/ProtonMail-6001D2?style=for-the-badge&logo=protonmail&logoColor=white" alt="ProtonMail">
     </a>
 </p>
 <br/>
+
 
 
 Huntools is a Python based command line utility crafted for penetration testers and bug bounty hunters. It    
