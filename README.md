@@ -35,12 +35,12 @@ for critical operations.
 
 - ✅ **Robust Installation:** Automated installation of tools via system package managers, pip, or Git cloning.
 - 🛡️ **Checksum Verification:** Ensures integrity of downloaded Go tools to prevent corruption.
-- 🩹 **Incomplete Installation Handling:** Detects and repairs partially cloned Git repositories.
+- 🩹 **Installation Handling:** Detects and repairs partially cloned Git repositories.
 - 🔄 **Reinstall Command:** Easily fix corrupted tools by performing a fresh reinstallation.
-- gracefully **Ctrl+C Handling:** Allows for clean and graceful abortion of ongoing processes.
-- 📊 **Dynamic Tool Count:** The banner now dynamically displays the total number of available tools.
+- 📊 **Tool Count:** The banner now dynamically displays the total number of available tools.
+- 🛠️ **Tool Management:** All tools are managed from a single, extensible data structure, making the script maintainable.
 - 🔍 **Smart Checks:** Skips installation if a tool is already present in your system's PATH.
-- 🛠️ **Unified Tool Management:** All tools are managed from a single, extensible data structure, making the script maintainable.
+- 🌐 **Cross-Platform:** Designed to work across various operating systems, Linux distrus Debian, Ubuntu, Fedora, and Arch
 - 🐳 **Docker Support:** Generate a `Dockerfile` to create a consistent and portable Huntools environment.
 
 ---
