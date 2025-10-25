@@ -35,9 +35,9 @@ def show_banner():
  ░  ░░ ░ ░░░ ░ ░    ░   ░ ░   ░      ░ ░ ░ ▒  ░ ░ ░ ▒    ░ ░   ░  ░  ░  
  ░  ░  ░   ░              ░              ░ ░      ░ ░      ░  ░      ░  
                                                                         
-        Author: l0n3m4n | Version: 2.0.0 | {tool_count} Hunter Tools
+           Author: l0n3m4n | Version: 3.0.0 | {tool_count} Hunter Tools
 """
-    print(f"{Colors.BLUE}{banner}{Colors.NC}")
+    print(f"{Colors.CYAN}{banner}{Colors.NC}")
 
 
 
@@ -168,6 +168,8 @@ ALL_TOOLS = {
     "sus_params": {"type": "git", "url": "https://github.com/g0ldencybersec/sus_params.git"},
 }
 
+ALL_TOOLS_LOWER_MAP = {name.lower(): name for name in ALL_TOOLS.keys()}
+
 
 def get_package_manager():
     if os.path.exists("/etc/debian_version"):
@@ -182,7 +184,7 @@ def get_package_manager():
         return None
 
 def install_dependencies():
-    print(f"{Colors.BLUE}--- Installing system dependencies ---{Colors.NC}")
+    print(f"{Colors.GREEN}--- 🔧 Installing system dependencies ---{Colors.NC}")
     package_manager = get_package_manager()
     if not package_manager:
         print(f"{Colors.RED}Unsupported OS. Please install dependencies manually.{Colors.NC}")
@@ -197,9 +199,9 @@ def install_dependencies():
 
     try:
         if package_manager == "apt-get":
-            print("Updating package list...")
+            print(f"{Colors.GREEN}Updating package list...{Colors.NC}")
             subprocess.run(f"sudo {package_manager} update -y", shell=True, check=True, capture_output=True)
-            print("Installing dependencies...")
+            print(f"{Colors.GREEN}Installing dependencies...{Colors.NC}")
             subprocess.run(f"sudo {package_manager} install -y {deps[package_manager]}", shell=True, check=True, capture_output=True)
         elif package_manager == "yum":
             print("Installing dependencies...")
@@ -447,9 +449,9 @@ def install_git_repos():
     return fail_count == 0
 
 def install_all():
-    print(f"\n{Colors.BLUE}==========================================={Colors.NC}")
-    print(f"{Colors.BLUE}--- Starting Full Installation of Huntools ---{Colors.NC}")
-    print(f"{Colors.BLUE}==========================================={Colors.NC}\n")
+    print(f"\n{Colors.GREEN}==========================================={Colors.NC}")
+    print(f"{Colors.GREEN}--- Starting Full Installation of Huntools ---{Colors.NC}")
+    print(f"{Colors.GREEN}==========================================={Colors.NC}\n")
 
     if not install_dependencies():
         print(f"\n{Colors.RED}Installation aborted due to an error during dependency installation.{Colors.NC}")
@@ -694,58 +696,142 @@ def update_all():
     elif package_manager == "brew":
         subprocess.run("brew update && brew upgrade", shell=True)
 
-def remove_single(tool_name):
-    print(f"Removing single tool: {tool_name}")
-
-    if tool_name not in ALL_TOOLS:
-        print(f"\n{Colors.RED}Error: Tool '{tool_name}' not found.{Colors.NC}")
-        print(f"{Colors.YELLOW}run 'huntools display --all' to see the list of available tools.{Colors.NC}\n")
-        return
-
-    tool = ALL_TOOLS[tool_name]
-    tool_type = tool["type"]
+def get_tool_location_and_command(tool_name, tool_info):
+    tool_type = tool_info["type"]
+    tool_location = "Unknown"
+    removal_command = None
+    needs_sudo = False
 
     if tool_type == "go":
-        gopath = os.path.join(os.environ.get("GOPATH", os.path.join(os.environ["HOME"], "go")), "bin", tool_name)
-        if os.path.exists(gopath):
-            os.remove(gopath)
-            print(f"Removed {tool_name}")
+        gopath_bin = os.path.join(os.environ.get("GOPATH", os.path.join(os.environ["HOME"], "go")), "bin", tool_name)
+        if os.path.exists(gopath_bin):
+            tool_location = gopath_bin
+            removal_command = ["rm", gopath_bin]
         else:
-            # If not in GOPATH, it might be in PATH, so try shutil.which
             tool_path = shutil.which(tool_name)
             if tool_path:
-                os.remove(tool_path)
-                print(f"Removed {tool_name} from {tool_path}")
-            else:
-                print(f"{tool_name} not found in GOPATH or PATH")
+                tool_location = tool_path
+                removal_command = ["rm", tool_path]
+        if tool_location.startswith("/usr/local/bin") or tool_location.startswith("/usr/bin"):
+            needs_sudo = True
 
     elif tool_type == "pip":
-        subprocess.run([sys.executable, "-m", "pip", "uninstall", "-y", tool_name])
+        tool_location = f"Installed via pip (executable likely in PATH)"
+        removal_command = [sys.executable, "-m", "pip", "uninstall", "-y", tool_name]
+        if sys.prefix != sys.base_prefix: # Not in a virtual environment
+            if not os.access(os.path.join(sys.prefix, 'bin'), os.W_OK): # Cannot write to site-packages
+                needs_sudo = True
+
 
     elif tool_type == "python_git":
         repo_path = os.path.join(os.environ["HOME"], ".huntools", "python", tool_name)
         if os.path.exists(repo_path):
-            shutil.rmtree(repo_path)
-            print(f"Removed {tool_name} repository.")
+            tool_location = repo_path
+            removal_command = ["rm", "-rf", repo_path]
         else:
-            print(f"Repository for {tool_name} not found.")
+            tool_location = f"Repository not found at {repo_path}"
 
     elif tool_type == "git":
         repo_path = os.path.join(os.environ["HOME"], ".huntools", "git", tool_name)
         if os.path.exists(repo_path):
-            shutil.rmtree(repo_path)
-            print(f"Removed {tool_name} repository.")
+            tool_location = repo_path
+            removal_command = ["rm", "-rf", repo_path]
         else:
-            print(f"Repository for {tool_name} not found.")
+            tool_location = f"Repository not found at {repo_path}"
 
     elif tool_type == "package":
         package_manager = get_package_manager()
-        if package_manager in ["apt-get", "yum"]:
-            subprocess.run(f"sudo {package_manager} remove -y {tool_name}", shell=True)
-        elif package_manager == "pacman":
-            subprocess.run(f"sudo {package_manager} -Rns --noconfirm {tool_name}", shell=True)
-        elif package_manager == "brew":
-            subprocess.run(f"brew uninstall {tool_name}", shell=True)
+        if package_manager:
+            tool_location = f"Managed by {package_manager}"
+            if package_manager in ["apt-get", "yum"]:
+                removal_command = ["sudo", package_manager, "remove", "-y", tool_name]
+                needs_sudo = True
+            elif package_manager == "pacman":
+                removal_command = ["sudo", package_manager, "-Rns", "--noconfirm", tool_name]
+                needs_sudo = True
+            elif package_manager == "brew":
+                removal_command = [package_manager, "uninstall", tool_name]
+        else:
+            tool_location = "System package (unsupported OS)"
+
+    return tool_location, removal_command, needs_sudo
+
+
+def remove_single(tool_name):
+    print(f"Removing single tool: {tool_name}")
+
+    tool_name_lower = tool_name.lower()
+    if tool_name_lower not in ALL_TOOLS_LOWER_MAP:
+        print(f"\n{Colors.RED}Error: Tool '{tool_name}' not found.{Colors.NC}")
+        print(f"{Colors.YELLOW}run 'huntools display --all' to see the list of available tools.{Colors.NC}\n")
+        return
+
+    actual_tool_name = ALL_TOOLS_LOWER_MAP[tool_name_lower]
+    tool_info = ALL_TOOLS[actual_tool_name]
+    tool_location, removal_command, needs_sudo = get_tool_location_and_command(tool_name, tool_info)
+
+    if tool_location == "Unknown" or (tool_info["type"] in ["python_git", "git"] and not os.path.exists(tool_location)):
+        print(f"{Colors.YELLOW}⚠️  Warning: Could not determine the exact installation path for {tool_name}. Proceeding with generic removal attempt.{Colors.NC}")
+
+    warning_message = f"{Colors.RED}⚠️  WARNING: You are about to remove {tool_name}.\n"
+    warning_message += f"📍 Location: {Colors.CYAN}{tool_location}{Colors.NC}{Colors.RED}"
+    if needs_sudo:
+        warning_message += f"\n{Colors.RED}🚨 This tool is in a system-protected directory and may require 'sudo' to remove.{Colors.NC}"
+    print(warning_message)
+
+    confirmation = input(f"{Colors.YELLOW}Are you sure you want to proceed? (yes/no): {Colors.NC}").lower()
+    if confirmation != 'yes':
+        print(f"{Colors.BLUE}Removal of {tool_name} aborted.{Colors.NC}")
+        return
+
+    # Execute removal based on tool_type and determined command
+    tool_type = tool_info["type"]
+    try:
+        if tool_type == "go":
+            if removal_command:
+                subprocess.run(removal_command, check=True)
+                print(f"{Colors.GREEN}Removed {tool_name} from {tool_location}.{Colors.NC}")
+            else:
+                print(f"{Colors.YELLOW}Could not find specific removal command for Go tool. Attempting generic removal.{Colors.NC}")
+                # Fallback to original logic if removal_command was not set
+                gopath = os.path.join(os.environ.get("GOPATH", os.path.join(os.environ["HOME"], "go")), "bin", tool_name)
+                if os.path.exists(gopath):
+                    os.remove(gopath)
+                    print(f"{Colors.GREEN}Removed {tool_name} from {gopath}.{Colors.NC}")
+                else:
+                    tool_path = shutil.which(tool_name)
+                    if tool_path:
+                        os.remove(tool_path)
+                        print(f"{Colors.GREEN}Removed {tool_name} from {tool_path}.{Colors.NC}")
+                    else:
+                        print(f"{Colors.RED}Error: {tool_name} not found in GOPATH or PATH for removal.{Colors.NC}")
+
+        elif tool_type == "pip":
+            subprocess.run(removal_command, check=True)
+            print(f"{Colors.GREEN}Removed {tool_name} via pip.{Colors.NC}")
+
+        elif tool_type == "python_git" or tool_type == "git":
+            if os.path.exists(tool_location): # tool_location is repo_path here
+                shutil.rmtree(tool_location)
+                print(f"{Colors.GREEN}Removed {tool_name} repository from {tool_location}.{Colors.NC}")
+            else:
+                print(f"{Colors.RED}Error: Repository for {tool_name} not found at {tool_location} for removal.{Colors.NC}")
+
+        elif tool_type == "package":
+            if removal_command:
+                subprocess.run(removal_command, check=True)
+                print(f"{Colors.GREEN}Removed {tool_name} via package manager.{Colors.NC}")
+            else:
+                print(f"{Colors.RED}Error: Could not find package manager removal command for {tool_name}.{Colors.NC}")
+
+    except subprocess.CalledProcessError as e:
+        print(f"{Colors.RED}Error removing {tool_name}: {e}{Colors.NC}")
+        if e.stderr:
+            print(f"{Colors.RED}Stderr: {e.stderr.decode()}{Colors.NC}")
+        print(f"{Colors.YELLOW}If this is a permission error, try running with 'sudo'.{Colors.NC}")
+    except OSError as e:
+        print(f"{Colors.RED}Error removing {tool_name}: {e}{Colors.NC}")
+        print(f"{Colors.YELLOW}If this is a permission error, try running with 'sudo'.{Colors.NC}")
 def get_installed_tools_count():
     installed_count = 0
     for tool_name, tool_info in ALL_TOOLS.items():
@@ -828,13 +914,13 @@ def self_update():
         print("Update failed. Please make sure you are in the huntools git repository.")
 
 def show_path():
-    print("Displaying huntools paths:")
+    print(f"{Colors.NC}Displaying huntools paths:{Colors.NC}")
     huntools_dir = os.path.join(os.environ["HOME"], ".huntools")
-    print(f"  - Installation directory: {huntools_dir}")
-    print(f"  - Python tools directory: {os.path.join(huntools_dir, 'python')}")
-    print(f"  - Git repos directory: {os.path.join(huntools_dir, 'git')}")
-    print(f"  - Go binary path: {os.path.join(os.environ.get('GOPATH', os.path.join(os.environ['HOME'], 'go')), 'bin')}")
-    print(f"  - Config file: {os.path.join(os.environ['HOME'], '.config', 'huntools', 'config.yml')}")
+    print(f"{Colors.NC}  - Installation directory: {Colors.GREEN}{huntools_dir}{Colors.NC}")
+    print(f"{Colors.NC}  - Python tools directory: {Colors.GREEN}{os.path.join(huntools_dir, 'python')}{Colors.NC}")
+    print(f"{Colors.NC}  - Git repos directory: {Colors.GREEN}{os.path.join(huntools_dir, 'git')}{Colors.NC}")
+    print(f"{Colors.NC}  - Go binary path: {Colors.GREEN}{os.path.join(os.environ.get('GOPATH', os.path.join(os.environ['HOME'], 'go')), 'bin')}{Colors.NC}")
+    print(f"{Colors.NC}  - Config file: {Colors.GREEN}{os.path.join(os.environ['HOME'], '.config', 'huntools', 'config.yml')}{Colors.NC}")
 
 def show_changelog():
     changelog_path = "CHANGELOG.md"
@@ -843,6 +929,69 @@ def show_changelog():
             print(f.read())
     else:
         print("CHANGELOG.md not found.")
+
+def generate_dockerfile(filename=None):
+    dockerfile_content = """# Use an official Python runtime as a parent image
+FROM python:3.10-slim-buster
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Install system dependencies
+# This assumes a Debian-based system (buster)
+# We need git, curl, wget, build-essential, gcc, cmake, libpcap-dev, dnsutils, libssl-dev, libffi-dev, libxml2-dev, libxslt1-dev, zlib1g-dev
+# Go will be installed by huntools itself
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    wget \
+    build-essential \
+    gcc \
+    cmake \
+    libpcap-dev \
+    dnsutils \
+    libssl-dev \
+    libffi-dev \
+    libxml2-dev \
+    libxslt1-dev \
+    zlib1g-dev \
+    ruby \
+    nmap \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy the current directory contents into the container at /app
+COPY . /app
+
+# Install huntools and all its managed tools
+# This will also install Go if not present
+# We need to ensure huntools.py is executable
+RUN chmod +x huntools.py && ./huntools.py install -a
+
+# Set environment variables for Go (if huntools installed it)
+ENV GOROOT=/usr/local/go
+ENV GOPATH=/root/go
+ENV PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+
+# Expose any ports if necessary (e.g., for web tools) - customize as needed
+# EXPOSE 8080
+
+# Define the default command to run when the container starts
+# This will give a shell where huntools and other tools are available
+CMD ["bash"]
+
+# Alternatively, to run huntools directly:
+# ENTRYPOINT ["./huntools.py"]
+# CMD ["--help"]
+"""
+    if filename:
+        try:
+            with open(filename, "w") as f:
+                f.write(dockerfile_content)
+            print(f"{Colors.NC}Dockerfile successfully generated: {Colors.GREEN}{os.path.abspath(filename)}{Colors.NC}")
+        except IOError as e:
+            print(f"{Colors.RED}Error writing Dockerfile to {filename}: {e}{Colors.NC}")
+    else:
+        print(dockerfile_content)
 
 def main():
     try:
@@ -858,7 +1007,7 @@ def main():
 
         # Install command
         install_parser = subparsers.add_parser("install", help="Install tools", add_help=False)
-        install_parser.add_argument("-h", action="help", help="show this help message and exit")
+        install_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
         install_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
         install_parser.add_argument("-s", dest="install_single", help="Install a single, specified tool from the available list.", metavar="TOOL")
         install_parser.add_argument("--single", dest="install_single", help=argparse.SUPPRESS, metavar="TOOL")
@@ -866,11 +1015,15 @@ def main():
         install_parser.add_argument("--all", dest="install_all", action="store_true", help=argparse.SUPPRESS)
 
         # Reinstall command
-        reinstall_parser = subparsers.add_parser("reinstall", help="Reinstall a tool")
+        reinstall_parser = subparsers.add_parser("reinstall", help="Reinstall a tool", add_help=False)
+        reinstall_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
+        reinstall_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
         reinstall_parser.add_argument("tool_name", help="The name of the tool to reinstall")
 
         # Update command
-        update_parser = subparsers.add_parser("update", help="Update tools")
+        update_parser = subparsers.add_parser("update", help="Update tools", add_help=False)
+        update_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
+        update_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
         update_parser.add_argument("-s", dest="update_single", help="Update a single, specified tool to its latest version.", metavar="TOOL")
         update_parser.add_argument("--single", dest="update_single", help=argparse.SUPPRESS, metavar="TOOL")
         update_parser.add_argument("--single-update", dest="update_single", help=argparse.SUPPRESS, metavar="TOOL")
@@ -883,7 +1036,9 @@ def main():
         update_parser.add_argument("--update-self", dest="self_update", action="store_true", help=argparse.SUPPRESS)
 
         # Remove command
-        remove_parser = subparsers.add_parser("remove", help="Remove tools")
+        remove_parser = subparsers.add_parser("remove", help="Remove tools", add_help=False)
+        remove_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
+        remove_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
         remove_parser.add_argument("-rs", dest="remove_single", help="Remove a single, specified tool.", metavar="TOOL")
         remove_parser.add_argument("--single", dest="remove_single", help=argparse.SUPPRESS, metavar="TOOL")
         remove_parser.add_argument("--remove-single", dest="remove_single", help=argparse.SUPPRESS, metavar="TOOL")
@@ -895,20 +1050,42 @@ def main():
         remove_parser.add_argument("--clean-all", dest="clean_all", action="store_true", help=argparse.SUPPRESS)
 
         # Other commands
-        display_parser = subparsers.add_parser("display", help="Display information")
-        display_parser.add_argument("-a", "--all", dest="display_all", action="store_true", help="Show all tools available for installation.")
+        display_parser = subparsers.add_parser("display", help="Display all tools", add_help=False)
+        display_parser.add_argument("-a", dest="display_all", action="store_true", help="Show all tools available for installation.")
+        display_parser.add_argument("--all", dest="display_all", action="store_true", help=argparse.SUPPRESS)
+        display_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
+        display_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
         
-        check_parser = subparsers.add_parser("check", help="Check tool health")
+        check_parser = subparsers.add_parser("check", help="Check tool health", add_help=False)
+        check_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
+        check_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
         check_parser.add_argument("-hc", dest="checking_health", action="store_true", help="Perform a health check on all installed tools.")
 
-        show_parser = subparsers.add_parser("show", help="Show information")
-        show_parser.add_argument("--path", action="store_true", help="Display all relevant paths used by huntools.")
-        show_parser.add_argument("--changelog", action="store_true", help="View the latest changes and updates to huntools.")
+        show_parser = subparsers.add_parser("show", help="Show information", add_help=False)
+        show_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
+        show_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
+        show_parser.add_argument("-pl", dest="path", action="store_true", help="Display all relevant paths used by huntools.")
+        show_parser.add_argument("--path", action="store_true", help=argparse.SUPPRESS)
+        show_parser.add_argument("-cl", dest="changelog", action="store_true", help="View the latest changes and updates to huntools.")
+        show_parser.add_argument("--changelog", action="store_true", help=argparse.SUPPRESS)
 
-        config_parser = subparsers.add_parser("config", help="Configure huntools")
-        config_parser.add_argument("-p", "--path", dest="config_path", help="Specify a custom path for the configuration file.\n(Default: ~/.config/huntools/config.yml)")
-        config_parser.add_argument("-bp", "--binary-path", dest="binary_path", help="Set a custom directory for downloaded binaries.\n(Default: ~/.huntools/bin)")
-        config_parser.add_argument("-ip", "--install-path", dest="install_path", help="Define the installation directory for all tools.\n(Default: ~/.huntools/)")
+        config_parser = subparsers.add_parser("config", help="Configure huntools", add_help=False)
+        config_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
+        config_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
+        config_parser.add_argument("-cp", dest="config_path", help="Specify a custom path for the configuration file.\n(Default: ~/.config/huntools/config.yml)")
+        config_parser.add_argument("--path", dest="config_path", help=argparse.SUPPRESS)
+        config_parser.add_argument("-bp", dest="binary_path", help="Set a custom directory for downloaded binaries.\n(Default: ~/.huntools/bin)")
+        config_parser.add_argument("--binary-path", dest="binary_path", help=argparse.SUPPRESS)
+        config_parser.add_argument("-ip", dest="install_path", help="Define the installation directory for all tools.\n(Default: ~/.huntools/)")
+        config_parser.add_argument("--install-path", dest="install_path", help=argparse.SUPPRESS)
+
+        # Docker command
+        docker_parser = subparsers.add_parser("docker", help="Manage Docker image", add_help=False)
+        docker_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
+        docker_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
+        docker_parser.add_argument("-g", "--generate", action="store_true", help="Generate a Dockerfile for Huntools.")
+        docker_parser.add_argument("-s", dest="save_filename", nargs='?', const="Dockerfile", help="Specify a filename to save the Dockerfile. Defaults to 'Dockerfile'.", metavar="FILENAME")
+        docker_parser.add_argument("--save", dest="save_filename", nargs='?', const="Dockerfile", help=argparse.SUPPRESS, metavar="FILENAME")
 
         args = parser.parse_args()
 
@@ -955,6 +1132,12 @@ def main():
                 print(f"Setting binary path to: {args.binary_path}")
             if args.install_path:
                 print(f"Setting install path to: {args.install_path}")
+        elif args.command == "docker":
+            if args.generate:
+                if args.save_filename:
+                    generate_dockerfile(filename=args.save_filename)
+                else:
+                    generate_dockerfile(filename="Dockerfile")
 
     except KeyboardInterrupt:
         print(f"\n\n{Colors.RED}Installation aborted by user (Ctrl+C).{Colors.NC}")
