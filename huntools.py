@@ -477,17 +477,24 @@ def install_all():
 def install_single(tool_name):
     print(f"Attempting to install single tool: {tool_name}")
 
+    if tool_name not in ALL_TOOLS:
+        print(f"\n{Colors.RED}Error: Tool '{tool_name}' not found.{Colors.NC}")
+        print(f"{Colors.YELLOW}Please make sure you have spelled the tool name correctly, or run 'huntools display --all' to see the list of available tools.{Colors.NC}\n")
+        return
+
     existing_path = shutil.which(tool_name)
     if existing_path:
         print(f"{Colors.YELLOW}{tool_name} is already installed at {existing_path}. Skipping installation.{Colors.NC}")
         return
 
-    if tool_name in GO_TOOLS_MAP:
-        print(f"Installing Go tool: {tool_name}")
-        subprocess.run(GO_TOOLS_MAP[tool_name], shell=True)
-        return
+    tool = ALL_TOOLS[tool_name]
+    tool_type = tool["type"]
 
-    if tool_name in PACKAGE_TOOLS:
+    if tool_type == "go":
+        print(f"Installing Go tool: {tool_name}")
+        subprocess.run(tool["install"], shell=True)
+    
+    elif tool_type == "package":
         print(f"Installing package: {tool_name}")
         package_manager = get_package_manager()
         if not package_manager:
@@ -501,36 +508,30 @@ def install_single(tool_name):
             subprocess.run(f"sudo {package_manager} -S --noconfirm {tool_name}", shell=True)
         elif package_manager == "brew":
             subprocess.run(f"{package_manager} install {tool_name}", shell=True)
-        return
 
-    if tool_name in PYTHON_GIT_TOOLS:
+    elif tool_type == "python_git":
         print(f"Installing Python tool from git: {tool_name}")
         install_dir = os.path.join(os.environ["HOME"], ".huntools", "python")
         os.makedirs(install_dir, exist_ok=True)
-        repo_url = PYTHON_GIT_TOOLS[tool_name]
+        repo_url = tool["url"]
         repo_path = os.path.join(install_dir, tool_name)
         subprocess.run(["git", "clone", repo_url, repo_path])
         
         requirements_path = os.path.join(repo_path, "requirements.txt")
         if os.path.exists(requirements_path):
             subprocess.run([sys.executable, "-m", "pip", "install", "-r", requirements_path])
-        return
 
-    if tool_name in PYTHON_PIP_TOOLS:
+    elif tool_type == "pip":
         print(f"Installing Python tool from pip: {tool_name}")
         subprocess.run([sys.executable, "-m", "pip", "install", tool_name])
-        return
-        
-    if tool_name in GIT_REPOS:
+
+    elif tool_type == "git":
         print(f"Cloning git repository: {tool_name}")
         install_dir = os.path.join(os.environ["HOME"], ".huntools", "git")
         os.makedirs(install_dir, exist_ok=True)
-        repo_url = GIT_REPOS[tool_name]
+        repo_url = tool["url"]
         repo_path = os.path.join(install_dir, tool_name)
         subprocess.run(["git", "clone", repo_url, repo_path])
-        return
-
-    print(f"Tool '{tool_name}' not found in any of the predefined tool lists.")
 
 def reinstall_single(tool_name):
     print(f"{Colors.BLUE}--- Reinstalling {tool_name} ---{Colors.NC}")
@@ -584,24 +585,36 @@ def checking_health():
 
 def update_single(tool_name):
     print(f"Updating single tool: {tool_name}")
-    if tool_name in GO_TOOLS_MAP:
-        subprocess.run(GO_TOOLS_MAP[tool_name], shell=True)
+
+    if tool_name not in ALL_TOOLS:
+        print(f"\n{Colors.RED}Error: Tool '{tool_name}' not found.{Colors.NC}")
+        print(f"{Colors.YELLOW}Please make sure you have spelled the tool name correctly, or run 'huntools display --all' to see the list of available tools.{Colors.NC}\n")
         return
 
-    if tool_name in PYTHON_PIP_TOOLS:
+    tool = ALL_TOOLS[tool_name]
+    tool_type = tool["type"]
+
+    if tool_type == "go":
+        subprocess.run(tool["install"], shell=True)
+
+    elif tool_type == "pip":
         subprocess.run([sys.executable, "-m", "pip", "install", "--upgrade", tool_name])
-        return
 
-    if tool_name in PYTHON_GIT_TOOLS or tool_name in GIT_REPOS:
-        install_dir = ".huntools/python" if tool_name in PYTHON_GIT_TOOLS else ".huntools/git"
-        repo_path = os.path.join(os.environ["HOME"], install_dir, tool_name)
+    elif tool_type == "python_git":
+        repo_path = os.path.join(os.environ["HOME"], ".huntools", "python", tool_name)
         if os.path.exists(repo_path):
             subprocess.run(["git", "-C", repo_path, "pull"])
         else:
             print(f"Tool {tool_name} not found in {repo_path}. Cannot update.")
-        return
-    
-    if tool_name in PACKAGE_TOOLS:
+
+    elif tool_type == "git":
+        repo_path = os.path.join(os.environ["HOME"], ".huntools", "git", tool_name)
+        if os.path.exists(repo_path):
+            subprocess.run(["git", "-C", repo_path, "pull"])
+        else:
+            print(f"Tool {tool_name} not found in {repo_path}. Cannot update.")
+
+    elif tool_type == "package":
         package_manager = get_package_manager()
         if package_manager == "apt-get":
             subprocess.run(f"sudo {package_manager} install --only-upgrade -y {tool_name}", shell=True)
@@ -611,10 +624,6 @@ def update_single(tool_name):
             print("For Arch Linux, please run 'sudo pacman -Syu' to update all packages.")
         elif package_manager == "brew":
             subprocess.run(f"brew upgrade {tool_name}", shell=True)
-        return
-
-    print(f"Tool '{tool_name}' not found or update not supported for this type of tool.")
-
 def update_all():
     print("Updating all tools...")
     for tool, install_command in GO_TOOLS_MAP.items():
@@ -642,30 +651,49 @@ def update_all():
 
 def remove_single(tool_name):
     print(f"Removing single tool: {tool_name}")
-    if tool_name in GO_TOOLS_MAP:
+
+    if tool_name not in ALL_TOOLS:
+        print(f"\n{Colors.RED}Error: Tool '{tool_name}' not found.{Colors.NC}")
+        print(f"{Colors.YELLOW}Please make sure you have spelled the tool name correctly, or run 'huntools display --all' to see the list of available tools.{Colors.NC}\n")
+        return
+
+    tool = ALL_TOOLS[tool_name]
+    tool_type = tool["type"]
+
+    if tool_type == "go":
         gopath = os.path.join(os.environ.get("GOPATH", os.path.join(os.environ["HOME"], "go")), "bin", tool_name)
         if os.path.exists(gopath):
             os.remove(gopath)
             print(f"Removed {tool_name}")
         else:
-            print(f"{tool_name} not found in GOPATH")
-        return
+            # If not in GOPATH, it might be in PATH, so try shutil.which
+            tool_path = shutil.which(tool_name)
+            if tool_path:
+                os.remove(tool_path)
+                print(f"Removed {tool_name} from {tool_path}")
+            else:
+                print(f"{tool_name} not found in GOPATH or PATH")
 
-    if tool_name in PYTHON_PIP_TOOLS:
+    elif tool_type == "pip":
         subprocess.run([sys.executable, "-m", "pip", "uninstall", "-y", tool_name])
-        return
 
-    if tool_name in PYTHON_GIT_TOOLS or tool_name in GIT_REPOS:
-        install_dir = ".huntools/python" if tool_name in PYTHON_GIT_TOOLS else ".huntools/git"
-        repo_path = os.path.join(os.environ["HOME"], install_dir, tool_name)
+    elif tool_type == "python_git":
+        repo_path = os.path.join(os.environ["HOME"], ".huntools", "python", tool_name)
         if os.path.exists(repo_path):
             shutil.rmtree(repo_path)
             print(f"Removed {tool_name} repository.")
         else:
             print(f"Repository for {tool_name} not found.")
-        return
 
-    if tool_name in PACKAGE_TOOLS:
+    elif tool_type == "git":
+        repo_path = os.path.join(os.environ["HOME"], ".huntools", "git", tool_name)
+        if os.path.exists(repo_path):
+            shutil.rmtree(repo_path)
+            print(f"Removed {tool_name} repository.")
+        else:
+            print(f"Repository for {tool_name} not found.")
+
+    elif tool_type == "package":
         package_manager = get_package_manager()
         if package_manager in ["apt-get", "yum"]:
             subprocess.run(f"sudo {package_manager} remove -y {tool_name}", shell=True)
@@ -673,10 +701,6 @@ def remove_single(tool_name):
             subprocess.run(f"sudo {package_manager} -Rns --noconfirm {tool_name}", shell=True)
         elif package_manager == "brew":
             subprocess.run(f"brew uninstall {tool_name}", shell=True)
-        return
-
-    print(f"Tool '{tool_name}' not found or remove not supported for this type of tool.")
-
 def remove_all():
     print("Removing all installed tools...")
     gopath_bin = os.path.join(os.environ.get("GOPATH", os.path.join(os.environ["HOME"], "go")), "bin")
