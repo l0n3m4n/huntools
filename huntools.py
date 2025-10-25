@@ -589,7 +589,7 @@ def update_single(tool_name):
 
     if tool_name not in ALL_TOOLS:
         print(f"\n{Colors.RED}Error: Tool '{tool_name}' not found.{Colors.NC}")
-        print(f"{Colors.YELLOW} run 'huntools display --all' to see the list of available tools.{Colors.NC}\n")
+        print(f"{Colors.YELLOW}run 'huntools display --all' to see the list of available tools.{Colors.NC}\n")
         return
 
     tool = ALL_TOOLS[tool_name]
@@ -655,7 +655,7 @@ def remove_single(tool_name):
 
     if tool_name not in ALL_TOOLS:
         print(f"\n{Colors.RED}Error: Tool '{tool_name}' not found.{Colors.NC}")
-        print(f"{Colors.YELLOW} run 'huntools display --all' to see the list of available tools.{Colors.NC}\n")
+        print(f"{Colors.YELLOW}run 'huntools display --all' to see the list of available tools.{Colors.NC}\n")
         return
 
     tool = ALL_TOOLS[tool_name]
