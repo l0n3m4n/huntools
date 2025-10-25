@@ -43,7 +43,7 @@ def show_banner():
 
 
 
-# Tool lists
+# Master Tool List
 ALL_TOOLS = {
     
     # Go Tools
@@ -536,6 +536,12 @@ def install_single(tool_name):
 
 def reinstall_single(tool_name):
     print(f"{Colors.BLUE}--- Reinstalling {tool_name} ---{Colors.NC}")
+
+    if tool_name not in ALL_TOOLS:
+        print(f"\n{Colors.RED}Error: Tool '{tool_name}' not found.{Colors.NC}")
+        print(f"{Colors.YELLOW}run 'huntools display --all' to see the list of available tools.{Colors.NC}\n")
+        return
+
     remove_single(tool_name)
     install_single(tool_name)
     print(f"\n{Colors.GREEN}--- Reinstallation of {tool_name} complete! ---{Colors.NC}")
@@ -543,8 +549,46 @@ def reinstall_single(tool_name):
 def display_all():
     print("Available tools:")
     all_tools = sorted(ALL_TOOLS.keys())
-    for tool in all_tools:
-        print(f"  - {tool}")
+    if not all_tools:
+        print("  No tools available.")
+        return
+
+    try:
+        terminal_width = os.get_terminal_size().columns
+    except OSError:
+        terminal_width = 80  # Default width if not running in a proper terminal
+    max_len = max(len(tool) for tool in all_tools)
+
+    # Calculate a base width for each tool entry: "- " + tool_name + "  " (separator)
+    # The max_len ensures all tool names in a column are aligned
+    base_entry_width = max_len + 2 # For "- " prefix
+    
+    # Determine how many columns can fit
+    # We need at least 2 spaces between columns for readability
+    min_column_spacing = 2
+    
+    # Calculate the effective width needed per column including the separator
+    effective_column_width = base_entry_width + min_column_spacing
+
+    num_columns = max(1, terminal_width // effective_column_width)
+    
+    # If only one column, ensure it doesn't take up the whole width unnecessarily
+    if num_columns == 1:
+        # Just print one per line, no need for complex spacing
+        for tool in all_tools:
+            print(f"{Colors.GREEN}- {tool}{Colors.NC}")
+        return
+
+    # Print tools in columns
+    for i in range(0, len(all_tools), num_columns):
+        row_tools = all_tools[i:i + num_columns]
+        row_output_parts = []
+        for tool in row_tools:
+            # Pad each tool name to max_len for alignment, then add color and prefix
+            row_output_parts.append(f"{Colors.GREEN}- {tool:<{max_len}}{Colors.NC}")
+        
+        # Join parts with the minimum column spacing
+        print((" " * min_column_spacing).join(row_output_parts))
 
 def checking_health():
     print("Performing health check on all tools...")
@@ -702,7 +746,41 @@ def remove_single(tool_name):
             subprocess.run(f"sudo {package_manager} -Rns --noconfirm {tool_name}", shell=True)
         elif package_manager == "brew":
             subprocess.run(f"brew uninstall {tool_name}", shell=True)
+def get_installed_tools_count():
+    installed_count = 0
+    for tool_name, tool_info in ALL_TOOLS.items():
+        is_installed = False
+        
+        # Check if the tool is in the PATH
+        tool_path = shutil.which(tool_name)
+        if tool_path:
+            is_installed = True
+        
+        # If not in PATH, check for git repos
+        elif tool_info["type"] == "python_git":
+            repo_path = os.path.join(os.environ["HOME"], ".huntools", "python", tool_name)
+            if os.path.exists(repo_path):
+                is_installed = True
+        
+        elif tool_info["type"] == "git":
+            repo_path = os.path.join(os.environ["HOME"], ".huntools", "git", tool_name)
+            if os.path.exists(repo_path):
+                is_installed = True
+
+        if is_installed:
+            installed_count += 1
+    return installed_count
+
+
 def remove_all():
+    installed_tool_count = get_installed_tools_count()
+    warning_message = f"{Colors.RED}⚠️  WARNING: You are about to remove {installed_tool_count} currently installed huntools. This action is irreversible.{Colors.NC}"
+    print(warning_message)
+    confirmation = input(f"{Colors.YELLOW}Are you sure you want to proceed? (yes/no): {Colors.NC}").lower()
+    if confirmation != 'yes':
+        print(f"{Colors.BLUE}Removal aborted.{Colors.NC}")
+        return
+
     print("Removing all installed tools...")
     gopath_bin = os.path.join(os.environ.get("GOPATH", os.path.join(os.environ["HOME"], "go")), "bin")
     for tool in GO_TOOLS_MAP.keys():
@@ -727,6 +805,13 @@ def remove_all():
         print(f"brew uninstall {' '.join(PACKAGE_TOOLS)}")
 
 def clean_all():
+    warning_message = f"{Colors.RED}⚠️  WARNING: You are about to purge delete all data, including configuration. This action is irreversible.{Colors.NC}"
+    print(warning_message)
+    confirmation = input(f"{Colors.YELLOW}Are you sure you want to proceed? (yes/no): {Colors.NC}").lower()
+    if confirmation != 'yes':
+        print(f"{Colors.BLUE}Purge aborted.{Colors.NC}")
+        return
+
     print("Purging all huntools data...")
     remove_all()
     config_dir = os.path.join(os.environ["HOME"], ".config", "huntools")
@@ -786,15 +871,28 @@ def main():
 
         # Update command
         update_parser = subparsers.add_parser("update", help="Update tools")
-        update_parser.add_argument("-s", "--single", dest="update_single", help="Update a single, specified tool to its latest version.")
-        update_parser.add_argument("-a", "--all", dest="update_all", action="store_true", help="Update all installed tools.")
-        update_parser.add_argument("--self", dest="self_update", action="store_true", help="Update huntools to the latest version.")
+        update_parser.add_argument("-s", dest="update_single", help="Update a single, specified tool to its latest version.", metavar="TOOL")
+        update_parser.add_argument("--single", dest="update_single", help=argparse.SUPPRESS, metavar="TOOL")
+        update_parser.add_argument("--single-update", dest="update_single", help=argparse.SUPPRESS, metavar="TOOL")
+        update_parser.add_argument("-ua", dest="update_all", action="store_true", help="Update all installed tools.")
+        update_parser.add_argument("--all", dest="update_all", action="store_true", help=argparse.SUPPRESS)
+        update_parser.add_argument("--update-all", dest="update_all", action="store_true", help=argparse.SUPPRESS)
+        update_parser.add_argument("-su", dest="self_update", action="store_true", help="Update huntools to the latest version.")
+        update_parser.add_argument("--self-update", dest="self_update", action="store_true", help=argparse.SUPPRESS)
+        update_parser.add_argument("--self", dest="self_update", action="store_true", help=argparse.SUPPRESS)
+        update_parser.add_argument("--update-self", dest="self_update", action="store_true", help=argparse.SUPPRESS)
 
         # Remove command
         remove_parser = subparsers.add_parser("remove", help="Remove tools")
-        remove_parser.add_argument("-s", "--single", dest="remove_single", help="Remove a single, specified tool.")
-        remove_parser.add_argument("-a", "--all", dest="remove_all", action="store_true", help="Remove all installed tools.")
-        remove_parser.add_argument("--clean", dest="clean_all", action="store_true", help="Purge all huntools data, including configs and installed tools.")
+        remove_parser.add_argument("-rs", dest="remove_single", help="Remove a single, specified tool.", metavar="TOOL")
+        remove_parser.add_argument("--single", dest="remove_single", help=argparse.SUPPRESS, metavar="TOOL")
+        remove_parser.add_argument("--remove-single", dest="remove_single", help=argparse.SUPPRESS, metavar="TOOL")
+        remove_parser.add_argument("-ra", dest="remove_all", action="store_true", help="Remove all installed tools.")
+        remove_parser.add_argument("--all", dest="remove_all", action="store_true", help=argparse.SUPPRESS)
+        remove_parser.add_argument("--remove-all", dest="remove_all", action="store_true", help=argparse.SUPPRESS)
+        remove_parser.add_argument("-ca", dest="clean_all", action="store_true", help="Purge all huntools data, including configurations and installed tools.")
+        remove_parser.add_argument("--clean", dest="clean_all", action="store_true", help=argparse.SUPPRESS)
+        remove_parser.add_argument("--clean-all", dest="clean_all", action="store_true", help=argparse.SUPPRESS)
 
         # Other commands
         display_parser = subparsers.add_parser("display", help="Display information")
