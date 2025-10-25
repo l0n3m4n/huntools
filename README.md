@@ -1,4 +1,5 @@
-<h1 align="center">🐞 Huntools</h1>
+<h1 align="center"><img src="logo.gif" alt="Huntools Logo" width="30"/> Huntools</h1>
+
 <br>
  
 <p align="center">
