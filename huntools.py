@@ -35,7 +35,7 @@ def show_banner():
  ░  ░░ ░ ░░░ ░ ░    ░   ░ ░   ░      ░ ░ ░ ▒  ░ ░ ░ ▒    ░ ░   ░  ░  ░  
  ░  ░  ░   ░              ░              ░ ░      ░ ░      ░  ░      ░  
                                                                         
-        Author: l0n3m4n | Version: 2.0.0 | {tool_count} Hunter's Arsenal 
+        Author: l0n3m4n | Version: 2.0.0 | {tool_count} Hunter Tools
 """
     print(f"{Colors.BLUE}{banner}{Colors.NC}")
 
