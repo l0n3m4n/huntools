@@ -95,7 +95,7 @@ def show_banner():
  ░  ░░ ░ ░░░ ░ ░    ░   ░ ░   ░      ░ ░ ░ ▒  ░ ░ ░ ▒    ░ ░   ░  ░  ░  
  ░  ░  ░   ░              ░              ░ ░      ░ ░      ░  ░      ░  
                                                                         
-           Author: l0n3m4n | Version: 3.2.0 | {tool_count} Hunter Tools
+           Author: l0n3m4n | Version: 3.3.0 | {tool_count} Hunter Tools
 """
     print(f"{Colors.CYAN}{banner}{Colors.NC}", end="")
 
@@ -634,6 +634,35 @@ def install_git_repos():
     print(f"{Colors.RED}Failed to clone: {fail_count}{Colors.NC}\n")
 
     return fail_count == 0
+
+def install_system():
+    print(f"{Colors.CYAN}--- Installing huntools to the system ---{Colors.NC}")
+    try:
+        huntools_path = os.path.abspath(__file__)
+        destination_path = "/usr/local/bin/huntools"
+        
+        print(f"This will copy huntools to {destination_path} and make it executable.")
+        print(f"This operation requires sudo privileges.")
+        
+        command = f"sudo cp {huntools_path} {destination_path} && sudo chmod +x {destination_path}"
+        
+        print(f"Running command: {command}")
+        
+        process = subprocess.run(command, shell=True, check=False, capture_output=True)
+        
+        if process.returncode == 0:
+            print(f"{Colors.GREEN}huntools installed successfully to {destination_path}{Colors.NC}")
+            print(f"You can now run it from anywhere by typing 'huntools'.")
+        else:
+            print(f"{Colors.RED}Error installing huntools.{Colors.NC}")
+            if process.stderr:
+                print(f"{Colors.RED}Stderr: {process.stderr.decode()}{Colors.NC}")
+            print(f"{Colors.YELLOW}Please try running the installation manually:{Colors.NC}")
+            print(f"  sudo cp {huntools_path} {destination_path}")
+            print(f"  sudo chmod +x {destination_path}")
+
+    except Exception as e:
+        print(f"{Colors.RED}An unexpected error occurred: {e}{Colors.NC}")
 
 def install_all():
     print(f"\n{Colors.GREEN}==========================================={Colors.NC}")
@@ -1205,6 +1234,24 @@ def clean_all(force=False):
     config_dir_to_remove = config["PATHS"].get("config_file", CONFIG_DIR)
     if os.path.exists(config_dir_to_remove):
         shutil.rmtree(config_dir_to_remove)
+    
+    huntools_system_path = "/usr/local/bin/huntools"
+    if os.path.exists(huntools_system_path):
+        print(f"{Colors.CYAN}Removing system-wide huntools executable...{Colors.NC}")
+        try:
+            command = f"sudo rm {huntools_system_path}"
+            print(f"Running command: {command}")
+            process = subprocess.run(command, shell=True, check=False, capture_output=True)
+            if process.returncode == 0:
+                print(f"{Colors.GREEN}Removed {huntools_system_path}.{Colors.NC}")
+            else:
+                print(f"{Colors.RED}Error removing {huntools_system_path}.{Colors.NC}")
+                if process.stderr:
+                    print(f"{Colors.RED}Stderr: {process.stderr.decode()}{Colors.NC}")
+                print(f"{Colors.YELLOW}You may need to remove it manually: sudo rm {huntools_system_path}{Colors.NC}")
+        except Exception as e:
+            print(f"{Colors.RED}An unexpected error occurred: {e}{Colors.NC}")
+
     print(f"{Colors.GREEN}All huntools data has been removed.{Colors.NC}")
 
 def self_update():
@@ -1409,6 +1456,8 @@ def main():
         install_parser.add_argument("--single", dest="install_single", help=argparse.SUPPRESS, metavar="TOOL")
         install_parser.add_argument("-a", dest="install_all", action="store_true", help="Install all available tools.")
         install_parser.add_argument("--all", dest="install_all", action="store_true", help=argparse.SUPPRESS)
+        install_parser.add_argument("-is", dest="install_system", action="store_true", help="Install huntools itself to the system (e.g., /usr/local/bin).")
+        install_parser.add_argument("--install-system", dest="install_system", action="store_true", help=argparse.SUPPRESS)
 
         # Reinstall command
         reinstall_parser = subparsers.add_parser("reinstall", help="Reinstall a tool", add_help=False, formatter_class=CustomHelpFormatter)
@@ -1497,6 +1546,8 @@ def main():
                 install_all()
             elif args.install_single:
                 install_single(args.install_single)
+            elif args.install_system:
+                install_system()
             else:
                 install_parser.print_help()
                 sys.exit(1)

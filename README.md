@@ -60,7 +60,7 @@ for critical operations.
  ░  ░░ ░ ░░░ ░ ░    ░   ░ ░   ░      ░ ░ ░ ▒  ░ ░ ░ ▒    ░ ░   ░  ░  ░  
  ░  ░  ░   ░              ░              ░ ░      ░ ░      ░  ░      ░  
                                                                         
-            Author: l0n3m4n | Version: 3.2.0 | 111 Hunter Tools
+            Author: l0n3m4n | Version: 3.3.0 | 111 Hunter Tools
 
 usage: huntools <command> [flags]
 
@@ -112,6 +112,14 @@ Available commands:
     sudo python3 huntools.py install -s <tool_name>
     ```
     *   *Example:* `sudo python3 huntools.py install -s subfinder`
+
+4.  **System-wide Installation (Optional):**
+
+    To make `huntools` accessible from anywhere, you can install it to `/usr/local/bin`.
+    ```bash
+    sudo python3 huntools.py install -is
+    ```
+    After this, you can run the tool simply by typing `huntools`.
 
 ### ⚙️ Customizing Huntools (Configuration)
 
