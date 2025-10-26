@@ -83,29 +83,12 @@ Available commands:
 
 ```
 
-
-## 📦 Installation
-
-1.  **Clone the repository:**
-
-    ```bash
-    git clone https://github.com/l0n3m4n/huntools.git
-    cd huntools
-    ```
-
-2.  **Run the installer:**
-
-    ```bash
-    sudo python3 huntools.py install -a
-    ```
-    *   To install a single tool: `sudo python3 huntools.py install -s <tool_name>`
-
 ---
 
-## 💡 Usage: 
+## 💡 Usage and Installation: 
  
 
-### 🚀 Step 1: Initial Setup & Installation
+### 🚀 Initial Setup & Installation
 
 1.  **Clone the Huntools Repository:**
     
@@ -130,7 +113,7 @@ Available commands:
     ```
     *   *Example:* `sudo python3 huntools.py install -s subfinder`
 
-### ⚙️ Step 2: Customizing Huntools (Configuration)
+### ⚙️ Customizing Huntools (Configuration)
 
 Huntools allows you to customize paths for its configuration, binaries, and installed tools.
 
@@ -162,7 +145,7 @@ Configuration changes are applied *before* running other commands that rely on t
     ```
     *   *Default:* `~/.huntools/`
 
-### 🔄 Step 3: Managing & Maintaining Your Tools
+### 🔄 Managing & Maintaining Your Tools
 
 Once installed, Huntools helps you keep your arsenal sharp.
 
@@ -200,7 +183,7 @@ Once installed, Huntools helps you keep your arsenal sharp.
     huntools check -hc
     ```
 
-### 🔍 Step 4: Viewing Information
+### 🔍 Viewing Information
 
 Huntools provides commands to quickly access important information.
 
@@ -242,7 +225,6 @@ When it's time to clean up, Huntools has you covered.
     ```bash
     huntools remove -ra
     ```
-    *   *Friendly Tip:* This action is irreversible!
 
 3.  **Purge All Huntools Data:**
 
@@ -250,9 +232,9 @@ When it's time to clean up, Huntools has you covered.
     ```bash
     huntools remove -ca
     ```
-    *   *Friendly Tip:* Use with extreme caution, as this is irreversible!
+    *   *Note:* Use with extreme caution, as this is irreversible!
 
-### 🐳 Step 6: Docker Integration
+### 🐳 Docker Integration
 
 For consistent, isolated, and portable tool management, Huntools supports Docker.
 
@@ -266,7 +248,6 @@ For consistent, isolated, and portable tool management, Huntools supports Docker
     ```bash
     python3 huntools.py docker -g -s my_custom_dockerfile
     ```
-    *   *Friendly Tip:* If you omit `-s` or provide `-s` without a filename, it defaults to `Dockerfile`.
 
 2.  **Build the Docker Image:**
     Navigate to the directory containing the generated `Dockerfile` and your `huntools.py` script, then build the Docker image.
