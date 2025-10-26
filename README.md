@@ -60,7 +60,7 @@ for critical operations.
  ░  ░░ ░ ░░░ ░ ░    ░   ░ ░   ░      ░ ░ ░ ▒  ░ ░ ░ ▒    ░ ░   ░  ░  ░  
  ░  ░  ░   ░              ░              ░ ░      ░ ░      ░  ░      ░  
                                                                         
-            Author: l0n3m4n | Version: 3.0.0 | 111 Hunter Tools
+            Author: l0n3m4n | Version: 3.2.0 | 111 Hunter Tools
 
 usage: huntools <command> [flags]
 

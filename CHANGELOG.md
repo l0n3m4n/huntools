@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+ 
+
+ 
+
+## [3.2.0] - 2025-10-26
+
+### Added
+
+-   **`show` Command Help Display:** Modified `huntools.py show` to automatically display its help menu if no specific arguments are provided, improving user guidance.
+-   `AttributeError: 'Namespace' object has no attribute 'force_remove'` when using `reinstall` command by adding `--force` argument to the `reinstall` subparser.
+-   **Changelog Display Empty Sections:** Refined `show_changelog` Markdown parsing logic to correctly display content under sub-headings (e.g., `### Added`), empty lines, and general text, resolving issues where sections appeared empty in the terminal output.
+-   **H3 Sub-heading Display:** Corrected `show_changelog` to remove the `### ` prefix from sub-headings (e.g., "Added", "Changed", "Fixed") for a cleaner terminal output.
+-   **Enhanced Markdown Rendering for Changelog:** Improved `show_changelog` to render Markdown headings, bold text, and inline code blocks with ANSI colors for a more professional and readable terminal output.
+-   **Enhanced H1 Heading Rendering:** Implemented bold and red coloring for H1 headings (`#`) in the changelog display for improved visibility and professionalism.
+-   **Italics Support in Changelog:** Enhanced `show_changelog` to render Markdown italics (`*text*` and `_text_`) with ANSI colors for improved readability.
+-   `--force` option for removal commands: Added a `-f`/`--force` argument to `remove`, `reinstall`, and `clean` commands to bypass confirmation prompts.
+
+### Changed
+
+-   **Force Removal Warning Suppression:** Corrected `remove_single` to properly suppress the warning message and confirmation prompt when the `--force` (`-f`) flag is used, providing a green colorized message for force removal initiation.
+-   **Go Tool Removal:** Refactored `remove_single` function to robustly locate and remove Go tool executables by prioritizing the configured Go binary directory, resolving "not found in GOPATH or PATH for removal" errors.
+-   **Improved Command Help Display:** Modified `install`, `update`, `remove`, `display`, `check`, `config`, and `docker` commands to automatically display their respective help menus if invoked without specific arguments, enhancing user guidance.
+-   **Dynamic Configuration File Path:** Implemented dynamic loading and saving of the configuration file, allowing users to specify a custom path for `config.ini` which persists across sessions.
+-   **Go Environment Variable Configuration:** Enhanced `install_go` to automatically configure Go environment variables in `~/.bashrc`, `~/.zshrc`, and `~/.profile`, preventing duplicate entries. Added specific manual instructions for `fish` shell users.
+
+## [3.1.0] - 2025-10-26
+
+### Added
+
+-   Persistent configuration: Implemented `configparser` to save and load custom installation paths (`install_dir`, `go_bin_dir`, `python_dir`, `git_dir`).
+
+### Changed
+
+-   `install_go`, `install_python_tools`, `install_git_repos`, `get_tool_location_and_command`, `show_path`, `remove_all`, and `clean_all` functions now utilize persistent configuration paths.
+
+### Fixed
+
+-   `update_all` function: Corrected to iterate through `ALL_TOOLS` and use appropriate update logic for each tool type, resolving `NameError` due to undefined variables.
+-   `remove_all` function: Corrected to iterate through `ALL_TOOLS` and use `remove_single` for each tool, resolving `NameError` due to undefined variables.
+-   Go environment variables: Modified `install_go` to prevent duplicate entries in `~/.bashrc`.
+
 ## [3.0.0] - 2025-10-25
 
 ### Added
@@ -56,3 +97,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   `NameError` in `install_single` due to old tool list references.
 -   `IndentationError` in error messages for `install_single`, `remove_single`, and `update_single`.
+
+## [1.0.0] - 2025-10-24
+
+### Added
+
+-   Initial project setup.
