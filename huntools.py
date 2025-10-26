@@ -10,6 +10,7 @@ import yaml
 import hashlib
 import textwrap
 import re
+import urllib.request
 
 
 
@@ -81,10 +82,9 @@ def _log_error(message):
         f.write(clean_message + "\n")
 
 
-
 def show_banner():
     tool_count = len(ALL_TOOLS)
-    banner = f"""  
+    banner = f'''  
  ██░ ██  █    ██  ███▄    █ ▄▄▄█████▓ ▒█████   ▒█████   ██▓      ██████ 
 ▓██░ ██▒ ██  ▓██▒ ██ ▀█   █ ▓  ██▒ ▓▒▒██▒  ██▒▒██▒  ██▒▓██▒    ▒██    ▒ 
 ▒██▀▀██░▓██  ▒██░▓██  ▀█ ██▒▒ ▓██░ ▒░▒██░  ██▒▒██░  ██▒▒██░    ░ ▓██▄   
@@ -95,10 +95,9 @@ def show_banner():
  ░  ░░ ░ ░░░ ░ ░    ░   ░ ░   ░      ░ ░ ░ ▒  ░ ░ ░ ▒    ░ ░   ░  ░  ░  
  ░  ░  ░   ░              ░              ░ ░      ░ ░      ░  ░      ░  
                                                                         
-           Author: l0n3m4n | Version: 3.3   .0 | {tool_count} Hunter Tools
-"""
+           Author: l0n3m4n | Version: 3.3.0 | {tool_count} Hunter Tools
+'''
     print(f"{Colors.CYAN}{banner}{Colors.NC}", end="")
-
 
 
 
@@ -635,31 +634,50 @@ def install_git_repos():
 
     return fail_count == 0
 
+def get_install_path():
+    # Prefer /usr/local/bin, but fall back to other common paths
+    common_paths = ["/usr/local/bin", "/usr/bin"]
+    path_dirs = os.environ.get("PATH", "").split(os.pathsep)
+
+    for path in common_paths:
+        if path in path_dirs and os.path.isdir(path):
+            return path
+    
+    # If no preferred path is found, return a default
+    return "/usr/local/bin"
+
 def install_system():
     print(f"{Colors.CYAN}--- Installing huntools to the system ---{Colors.NC}")
     try:
+        # Save the git repo path to the config
+        git_repo_path = os.getcwd()
+        config["PATHS"]["git_repo_path"] = git_repo_path
+        save_config()
+
         huntools_path = os.path.abspath(__file__)
-        destination_path = "/usr/local/bin/huntools"
+        install_dir = get_install_path()
+        destination_path = os.path.join(install_dir, "huntools")
         
-        print(f"{Colors.CYAN}This will copy huntools to {Colors.GREEN}{destination_path}{Colors.CYAN} and make it executable.{Colors.NC}")
-        print(f"{Colors.YELLOW}This operation requires sudo privileges.{Colors.NC}")
-        
-        command = f"sudo cp {huntools_path} {destination_path} && sudo chmod +x {destination_path}"
-        
-        print(f"Running command: {Colors.GREEN}{command}{Colors.NC}")
-        
-        process = subprocess.run(command, shell=True, check=False, capture_output=True)
-        
-        if process.returncode == 0:
-            print(f"{Colors.GREEN}huntools installed successfully to {destination_path}{Colors.NC}")
-            print(f"{Colors.CYAN}You can now run it from anywhere by typing 'huntools'.{Colors.NC}")
+        needs_update = False
+        if os.path.exists(destination_path):
+            installed_mtime = os.path.getmtime(destination_path)
+            local_mtime = os.path.getmtime(huntools_path)
+            if local_mtime > installed_mtime:
+                needs_update = True
         else:
-            print(f"{Colors.RED}Error installing huntools.{Colors.NC}")
-            if process.stderr:
-                print(f"{Colors.RED}Stderr: {process.stderr.decode()}{Colors.NC}")
-            print(f"{Colors.YELLOW}Please try running the installation manually:{Colors.NC}")
-            print(f"  sudo cp {huntools_path} {destination_path}")
-            print(f"  sudo chmod +x {destination_path}")
+            needs_update = True
+
+        if needs_update:
+            command = f"sudo cp {huntools_path} {destination_path} && sudo chmod +x {destination_path}"
+            process = subprocess.run(command, shell=True, check=False, capture_output=True)
+            if process.returncode == 0:
+                print(f"{Colors.GREEN}huntools installed/updated successfully to {destination_path}.{Colors.NC}")
+            else:
+                print(f"{Colors.RED}Error installing/updating huntools.{Colors.NC}")
+                if process.stderr:
+                    print(f"{Colors.RED}Stderr: {process.stderr.decode()}{Colors.NC}")
+        else:
+            print(f"{Colors.GREEN}huntools is already up-to-date.{Colors.NC}")
 
     except Exception as e:
         print(f"{Colors.RED}An unexpected error occurred: {e}{Colors.NC}")
@@ -956,29 +974,48 @@ def update_single(tool_name):
 def update_all():
     print(f"{Colors.CYAN}--- Updating all tools ---{Colors.NC}")
     
-    # Update system packages first
+    # Update system packages that are part of huntools
     package_manager = get_package_manager()
-    if package_manager:
+    package_tools = [name for name, tool in ALL_TOOLS.items() if tool["type"] == "package"]
+
+    if package_manager and package_tools:
         print(f"{Colors.GREEN}Updating system packages via {package_manager}...{Colors.NC}")
         try:
             if package_manager == "apt-get":
-                subprocess.run(f"sudo {package_manager} update -y", shell=True, check=True, capture_output=True)
-                subprocess.run(f"sudo {package_manager} upgrade -y", shell=True, check=True, capture_output=True)
+                # First update the package list
+                update_command = f"sudo {package_manager} update -y"
+                subprocess.run(update_command, shell=True, check=True, capture_output=True)
+                
+                # Now upgrade only the specific packages
+                install_command = f"sudo {package_manager} install --only-upgrade -y {' '.join(package_tools)}"
+                subprocess.run(install_command, shell=True, check=True, capture_output=True)
+
             elif package_manager == "yum":
-                subprocess.run(f"sudo {package_manager} update -y", shell=True, check=True, capture_output=True)
+                command = f"sudo {package_manager} update -y {' '.join(package_tools)}"
+                subprocess.run(command, shell=True, check=True, capture_output=True)
+
             elif package_manager == "pacman":
-                subprocess.run(f"sudo {package_manager} -Syu --noconfirm", shell=True, check=True, capture_output=True)
+                 print(f"{Colors.YELLOW}For Arch Linux, all packages are updated together. Running full system upgrade...{Colors.NC}")
+                 command = f"sudo {package_manager} -Syu --noconfirm"
+                 subprocess.run(command, shell=True, check=True, capture_output=True)
+
             elif package_manager == "brew":
-                subprocess.run("brew update && brew upgrade", shell=True, check=True, capture_output=True)
+                command = f"brew upgrade {' '.join(package_tools)}"
+                subprocess.run(command, shell=True, check=True, capture_output=True)
+
             print(f"{Colors.GREEN}System packages updated.{Colors.NC}\n")
         except subprocess.CalledProcessError as e:
             print(f"{Colors.RED}Error updating system packages: {e}{Colors.NC}")
             print(f"{Colors.RED}Stderr: {e.stderr.decode()}{Colors.NC}")
             print(f"{Colors.YELLOW}Continuing with other tool updates...{Colors.NC}\n")
     else:
-        print(f"{Colors.YELLOW}Unsupported OS for package updates. Skipping system package update.{Colors.NC}\n")
+        print(f"{Colors.YELLOW}No system packages to update or package manager not supported.{Colors.NC}\n")
 
+    # Update other tools
     for tool_name, tool_info in ALL_TOOLS.items():
+        if tool_info["type"] == "package":
+            continue # Already handled
+
         print(f"{Colors.CYAN}Updating {tool_name}...{Colors.NC}")
         tool_type = tool_info["type"]
         try:
@@ -1000,9 +1037,7 @@ def update_all():
                 else:
                     print(f"{Colors.YELLOW}Tool {tool_name} (git) not found at {repo_path}. Skipping update.{Colors.NC}")
                     continue
-            elif tool_type == "package":
-                print(f"{Colors.YELLOW}Package {tool_name} handled by system update. Skipping individual update.{Colors.NC}")
-                continue
+            
             print(f"{Colors.GREEN}{tool_name} updated successfully.{Colors.NC}")
         except subprocess.CalledProcessError as e:
             print(f"{Colors.RED}Error updating {tool_name}: {e}{Colors.NC}")
@@ -1040,7 +1075,8 @@ def get_tool_location_and_command(tool_name, tool_info):
 
 
     elif tool_type == "python_git":
-        repo_path = os.path.join(config["PATHS"].get("python_dir", os.path.join(os.environ["HOME"], ".huntools", "python")), tool_name)
+        repo_path = os.path.join(config["PATHS"].get("python_dir", os.path.join(os.environ["HOME"], ".huntools", "python")),
+ tool_name)
         if os.path.exists(repo_path):
             tool_location = repo_path
             removal_command = ["rm", "-rf", repo_path]
@@ -1048,7 +1084,8 @@ def get_tool_location_and_command(tool_name, tool_info):
             tool_location = f"Repository not found at {repo_path}"
 
     elif tool_type == "git":
-        repo_path = os.path.join(config["PATHS"].get("git_dir", os.path.join(os.environ["HOME"], ".huntools", "git")), tool_name)
+        repo_path = os.path.join(config["PATHS"].get("git_dir", os.path.join(os.environ["HOME"], ".huntools", "git")),
+ tool_name)
         if os.path.exists(repo_path):
             tool_location = repo_path
             removal_command = ["rm", "-rf", repo_path]
@@ -1256,25 +1293,37 @@ def clean_all(force=False):
 
 def self_update():
     print(f"{Colors.CYAN}Updating huntools...{Colors.NC}")
+    
+    git_repo_path = config.get("PATHS", {}).get("git_repo_path")
+    if not git_repo_path or not os.path.exists(os.path.join(git_repo_path, ".git")):
+        print(f"{Colors.RED}Huntools git repository path not found or invalid.{Colors.NC}")
+        print(f"{Colors.YELLOW}Please run the system-wide installation again from within the git repository to set the path:{Colors.NC}")
+        print(f"  ./huntools.py install -is")
+        return
+
     try:
-        # run git pull to get the latest version
-        subprocess.run(["git", "pull"], check=True)
+        # First, run git pull in the stored repository path
+        print(f"{Colors.CYAN}Pulling latest changes from git...{Colors.NC}")
+        subprocess.run(["git", "-C", git_repo_path, "pull"], check=True)
         print(f"{Colors.GREEN}huntools updated successfully from git.{Colors.NC}")
 
-        # check if huntools is installed system-wide and update it
-        huntools_system_path = "/usr/local/bin/huntools"
-        if os.path.exists(huntools_system_path):
+        # Now, check if huntools is installed system-wide and update it
+        install_dir = get_install_path()
+        destination_path = os.path.join(install_dir, "huntools")
+
+        if os.path.exists(destination_path):
             print(f"{Colors.CYAN}System-wide installation detected. Updating executable...{Colors.NC}")
             try:
-                huntools_local_path = os.path.abspath(__file__)
-                command = f"sudo cp {huntools_local_path} {huntools_system_path} && sudo chmod +x {huntools_system_path}"
+                # The source is the script inside the git repo
+                huntools_local_path = os.path.join(git_repo_path, "huntools.py")
+                command = f"sudo cp {huntools_local_path} {destination_path} && sudo chmod +x {destination_path}"
                 
                 print(f"Running command: {Colors.GREEN}{command}{Colors.NC}")
                 
                 process = subprocess.run(command, shell=True, check=False, capture_output=True)
                 
                 if process.returncode == 0:
-                    print(f"{Colors.GREEN}System-wide executable updated successfully.{Colors.NC}")
+                    print(f"{Colors.GREEN}System-wide executable updated successfully to {destination_path}.{Colors.NC}")
                 else:
                     print(f"{Colors.RED}Error updating system-wide executable.{Colors.NC}")
                     if process.stderr:
@@ -1303,45 +1352,48 @@ def show_path():
 
 # changelog display function for terminal with colors
 def show_changelog():
-    changelog_path = "CHANGELOG.md"
-    if os.path.exists(changelog_path):
-        with open(changelog_path, "r") as f:
-            for line in f:
-                line = line.rstrip() 
+    url = "https://raw.githubusercontent.com/l0n3m4n/huntools/refs/heads/main/CHANGELOG.md"
+    try:
+        with urllib.request.urlopen(url) as response:
+            changelog_content = response.read().decode('utf-8')
 
-                # H1 Heading
-                if line.startswith("# "):
-                    print(f"{Colors.BOLD_RED}{line.replace('# ', '')}{Colors.NC}")
-                # H2 Heading (Version)
-                elif line.startswith("## "):
-                    print(f"{Colors.CYAN}{line.replace('## ', '')}{Colors.NC}")
-                # H3 Sub-headings 
-                elif line.startswith("### "):
-                    print(f"{Colors.MAGENTA}{line.replace('### ', '')}{Colors.NC}")
-                # List items
-                elif line.startswith("- "):
-                    formatted_line = line.replace("- ", f"{Colors.GREEN}- {Colors.NC}")
-                    formatted_line = re.sub(r'\*\*(.*?)\*\*', f'{Colors.YELLOW}\\1{Colors.NC}', formatted_line) # Bold
-                    formatted_line = re.sub(r'_(.*?)_', f'{Colors.ITALIC}\\1{Colors.NC}', formatted_line) # Italics with underscore
-                    formatted_line = re.sub(r'\*(.*?)\*', f'{Colors.ITALIC}\\1{Colors.NC}', formatted_line) # Italics with asterisk
-                    formatted_line = re.sub(r'`(.*?)`', f'{Colors.BLUE}\\1{Colors.NC}', formatted_line) # Inline code
-                    print(formatted_line)
-                # Empty lines
-                elif not line.strip():
-                    print(line)
-                # Default for other lines (e.g. introductory text, links)
-                else:
-                    formatted_line = line
-                    formatted_line = re.sub(r'\*\*(.*?)\*\*', f'{Colors.YELLOW}\\1{Colors.NC}', formatted_line) # Bold
-                    formatted_line = re.sub(r'_(.*?)_', f'{Colors.ITALIC}\\1{Colors.NC}', formatted_line) # Italics with underscore
-                    formatted_line = re.sub(r'\*(.*?)\*', f'{Colors.ITALIC}\\1{Colors.NC}', formatted_line) # Italics with asterisk
-                    formatted_line = re.sub(r'`(.*?)`', f'{Colors.BLUE}\\1{Colors.NC}', formatted_line) # Inline code
-                    print(f"{Colors.NC}{formatted_line}{Colors.NC}")
-    else:
-        print(f"{Colors.RED}CHANGELOG.md not found.{Colors.NC}")
+        for line in changelog_content.splitlines():
+            line = line.rstrip()
+
+            # H1 Heading
+            if line.startswith("# "):
+                print(f"{Colors.BOLD_RED}{line.replace('# ', '')}{Colors.NC}")
+            # H2 Heading (Version)
+            elif line.startswith("## "):
+                print(f"{Colors.CYAN}{line.replace('## ', '')}{Colors.NC}")
+            # H3 Sub-headings
+            elif line.startswith("### "):
+                print(f"{Colors.MAGENTA}{line.replace('### ', '')}{Colors.NC}")
+            # List items
+            elif line.startswith("- "):
+                formatted_line = line.replace("- ", f"{Colors.GREEN}- {Colors.NC}")
+                formatted_line = re.sub(r'\*\*(.*?)\*\*', f'{Colors.YELLOW}\1{Colors.NC}', formatted_line) # Bold
+                formatted_line = re.sub(r'_(.*?)_', f'{Colors.ITALIC}\1{Colors.NC}', formatted_line) # Italics with underscore
+                formatted_line = re.sub(r'\*(.*?)\*', f'{Colors.ITALIC}\1{Colors.NC}', formatted_line) # Italics with asterisk
+                formatted_line = re.sub(r'`(.*?)`', f'{Colors.BLUE}\1{Colors.NC}', formatted_line) # Inline code
+                print(formatted_line)
+            # Empty lines
+            elif not line.strip():
+                print(line)
+            # Default for other lines (e.g. introductory text, links)
+            else:
+                formatted_line = line
+                formatted_line = re.sub(r'\*\*(.*?)\*\*', f'{Colors.YELLOW}\1{Colors.NC}', formatted_line) # Bold
+                formatted_line = re.sub(r'_(.*?)_', f'{Colors.ITALIC}\1{Colors.NC}', formatted_line) # Italics with underscore
+                formatted_line = re.sub(r'\*(.*?)\*', f'{Colors.ITALIC}\1{Colors.NC}', formatted_line) # Italics with asterisk
+                formatted_line = re.sub(r'`(.*?)`', f'{Colors.BLUE}\1{Colors.NC}', formatted_line) # Inline code
+                print(f"{Colors.NC}{formatted_line}{Colors.NC}")
+
+    except Exception as e:
+        print(f"{Colors.RED}Failed to fetch changelog from URL: {e}{Colors.NC}")
 
 def generate_dockerfile(filename=None):
-    dockerfile_content = """# Use an official Python runtime as a parent image
+    dockerfile_content = '''# Use an official Python runtime as a parent image
 FROM python:3.10-slim-buster
 
 # Set the working directory in the container
@@ -1392,7 +1444,7 @@ CMD ["bash"]
 # Alternatively, to run huntools directly:
 # ENTRYPOINT ["./huntools.py"]
 # CMD ["--help"]
-"""
+'''
     if filename:
         try:
             with open(filename, "w") as f:
