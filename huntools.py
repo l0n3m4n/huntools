@@ -95,7 +95,7 @@ def show_banner():
  ░  ░░ ░ ░░░ ░ ░    ░   ░ ░   ░      ░ ░ ░ ▒  ░ ░ ░ ▒    ░ ░   ░  ░  ░  
  ░  ░  ░   ░              ░              ░ ░      ░ ░      ░  ░      ░  
                                                                         
-           Author: l0n3m4n | Version: 3.3.0 | {tool_count} Hunter Tools
+           Author: l0n3m4n | Version: 3.3   .0 | {tool_count} Hunter Tools
 """
     print(f"{Colors.CYAN}{banner}{Colors.NC}", end="")
 
@@ -641,18 +641,18 @@ def install_system():
         huntools_path = os.path.abspath(__file__)
         destination_path = "/usr/local/bin/huntools"
         
-        print(f"This will copy huntools to {destination_path} and make it executable.")
-        print(f"This operation requires sudo privileges.")
+        print(f"{Colors.CYAN}This will copy huntools to {Colors.GREEN}{destination_path}{Colors.CYAN} and make it executable.{Colors.NC}")
+        print(f"{Colors.YELLOW}This operation requires sudo privileges.{Colors.NC}")
         
         command = f"sudo cp {huntools_path} {destination_path} && sudo chmod +x {destination_path}"
         
-        print(f"Running command: {command}")
+        print(f"Running command: {Colors.GREEN}{command}{Colors.NC}")
         
         process = subprocess.run(command, shell=True, check=False, capture_output=True)
         
         if process.returncode == 0:
             print(f"{Colors.GREEN}huntools installed successfully to {destination_path}{Colors.NC}")
-            print(f"You can now run it from anywhere by typing 'huntools'.")
+            print(f"{Colors.CYAN}You can now run it from anywhere by typing 'huntools'.{Colors.NC}")
         else:
             print(f"{Colors.RED}Error installing huntools.{Colors.NC}")
             if process.stderr:
@@ -1257,8 +1257,33 @@ def clean_all(force=False):
 def self_update():
     print(f"{Colors.CYAN}Updating huntools...{Colors.NC}")
     try:
+        # run git pull to get the latest version
         subprocess.run(["git", "pull"], check=True)
-        print(f"{Colors.GREEN}huntools updated successfully.{Colors.NC}")
+        print(f"{Colors.GREEN}huntools updated successfully from git.{Colors.NC}")
+
+        # check if huntools is installed system-wide and update it
+        huntools_system_path = "/usr/local/bin/huntools"
+        if os.path.exists(huntools_system_path):
+            print(f"{Colors.CYAN}System-wide installation detected. Updating executable...{Colors.NC}")
+            try:
+                huntools_local_path = os.path.abspath(__file__)
+                command = f"sudo cp {huntools_local_path} {huntools_system_path} && sudo chmod +x {huntools_system_path}"
+                
+                print(f"Running command: {Colors.GREEN}{command}{Colors.NC}")
+                
+                process = subprocess.run(command, shell=True, check=False, capture_output=True)
+                
+                if process.returncode == 0:
+                    print(f"{Colors.GREEN}System-wide executable updated successfully.{Colors.NC}")
+                else:
+                    print(f"{Colors.RED}Error updating system-wide executable.{Colors.NC}")
+                    if process.stderr:
+                        print(f"{Colors.RED}Stderr: {process.stderr.decode()}{Colors.NC}")
+                    print(f"{Colors.YELLOW}You may need to run 'sudo ./huntools.py install -is' again manually.{Colors.NC}")
+            
+            except Exception as e:
+                print(f"{Colors.RED}An unexpected error occurred while updating the system-wide executable: {e}{Colors.NC}")
+
     except subprocess.CalledProcessError:
         print(f"{Colors.RED}Update failed. Please make sure you are in the huntools git repository.{Colors.NC}")
 
@@ -1393,7 +1418,6 @@ class CustomHelpFormatter(argparse.HelpFormatter):
                     parts.append(f"    {Colors.YELLOW}{subparser_action.dest:<{max_len}}{Colors.NC}    {Colors.GREEN}{subparser_action.help}{Colors.NC}") # Add more indentation
             return "\n".join(parts)
         else:
-            # Format the option string (e.g., -s TOOL)
             action_header = self._format_action_invocation(action)
             
             # Format the help text (description)
