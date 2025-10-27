@@ -46,242 +46,6 @@ for critical operations.
 
 ---
 
-## 🛠️ Available Tools
-
-
-
-Here is a list of all the tools that Huntools can manage, categorized by their function.
-
-
-
-### Reconnaissance: Subdomain Enumeration
-
-
-
-|   |   |   |   |
-
-|---|---|---|---|
-
-| `subfinder` | `assetfinder` | `Amass` | `ShuffleDNS` |
-
-| `github-subdomains` | `gitlab-subdomains` | `puredns` | `OneForAll` |
-
-| `sns` |   |   |   |
-
-
-
-### Reconnaissance: Content Discovery & Crawling
-
-
-
-|   |   |   |
-
-|---|---|---|
-
-| `feroxbuster` | `katana` | `GoSpider` |
-
-
-
-### Reconnaissance: OSINT & Dorking
-
-
-
-|   |   |   |   |
-
-|---|---|---|---|
-
-| `metabigor` | `analyticsrelationships` | `gitdorks_go` | `mantra` |
-
-| `cent` | `dorks_hunter` | `regulator` | `LeakSearch` |
-
-| `metagoofil` | `censys` | `shodan` | `enumerepo` |
-
-
-
-### Reconnaissance: Web & API
-
-
-
-|   |   |   |   |
-
-|---|---|---|---|
-
-| `gau` | `waybackurls` | `httpx` | `github-endpoints` |
-
-| `subjs` | `roboxtractor` | `shortscan` | `ppmap` |
-
-| `sourcemapper` | `jsluice` | `urlfinder` | `csprecon` |
-
-| `VhostFinder` | `LinkFinder` | `fav-up` | `JSA` |
-
-| `SwaggerSpy` | `wafw00f` | `xnLinkFinder` |   |
-
-
-
-### Reconnaissance: Cloud
-
-
-
-|   |   |   |   |
-
-|---|---|---|---|
-
-| `s3scanner` | `cloud_enum` | `CloudHunter` | `msftrecon` |
-
-| `porch-pirate` |   |   |   |
-
-
-
-### Reconnaissance: Network, Port Scanning & TLS
-
-
-
-|   |   |   |   |
-
-|---|---|---|---|
-
-| `Naabu` | `ct-exposer` | `tlsx` | `smap` |
-
-| `nmap` | `crt` |   |   |
-
-
-
-### Fuzzing
-
-
-
-|   |   |   |
-
-|---|---|---|
-
-| `ffuf` | `crlfuzz` | `nomore403` |
-
-
-
-### Vulnerability Scanning: Web (XSS, CORS, Cache, etc.)
-
-
-
-|   |   |   |   |
-
-|---|---|---|---|
-
-| `Gxss` | `dalfox` | `Corsy` | `Oralyzer` |
-
-| `smuggler` | `Spoofy` | `Web-Cache-Vulnerability-Scanner` |   |
-
-
-
-### Vulnerability Scanning: Subdomain Takeover
-
-
-
-|   |
-
-|---|
-
-| `dnstake` |
-
-
-
-### Vulnerability Scanning: Secrets Scanning
-
-
-
-|   |   |
-
-|---|---|
-
-| `gitleaks` | `trufflehog` |
-
-
-
-### Vulnerability Scanning: General & Other
-
-
-
-|   |   |   |   |
-
-|---|---|---|---|
-
-| `Nuclei` | `gf` | `misconfig-mapper` | `CMSeeK` |
-
-
-
-### Exploitation
-
-
-
-|   |
-
-|---|
-
-| `commix` |
-
-
-
-### DNS Tools
-
-
-
-|   |   |   |
-
-|---|---|---|
-
-| `DNSx` | `massdns` | `hakip2host` |
-
-
-
-### Wordlists & Payloads
-
-
-
-|   |   |   |   |
-
-|---|---|---|---|
-
-| `gotator` | `cewl` | `pydictor` | `seclists` |
-
-| `sus_params` | `Gf-Patterns` |   |   |
-
-
-
-### Utilities
-
-
-
-|   |   |   |   |
-
-|---|---|---|---|
-
-| `qsreplace` | `anew` | `notify` | `unfurl` |
-
-| `mapcidr` | `cdncheck` | `dsieve` | `inscope` |
-
-| `nmapurls` | `jq` | `flameshot` | `lsd` |
-
-| `Scopify` | `urless` | `p1radup` |   |
-
-
-
-### Brute Force
-
-
-
-|   |
-
-|---|
-
-| `brutespray` |
-
-
-
----
-
-
-
-
-
 ```bash
 ~>  sudo python3 huntools.py
 
@@ -325,192 +89,148 @@ Available commands:
 
 ### 🚀 Initial Setup & Installation
 
-1.  **Clone the Huntools Repository:**
-    
-    ```bash
-    git clone https://github.com/l0n3m4n/huntools.git
-    cd huntools
-    ```
+- **Clone the Huntools Repository:**    
+```bash
+git clone https://github.com/l0n3m4n/huntools.git
+cd huntools
 
-2.  **Install All Tools (Recommended for First-Time Setup):**
+# Install All Tools (Recommended for First-Time Setup)
+sudo python3 huntools.py install -a
 
-    This command will install all the tools Huntools manages, along with necessary system dependencies and Go (if not already present).
-    ```bash
-    sudo python3 huntools.py install -a
-    ```
-    *   *Friendly Tip:* This is the easiest way to get your full arsenal ready!
+# Install a Single Tool
+sudo python3 huntools.py install -s <tool_name>
 
-3.  **Install a Single Tool:**
-  
-    If you only need a specific tool, you can install it individually.
-    ```bash
-    sudo python3 huntools.py install -s <tool_name>
-    ```
-    *   *Example:* `sudo python3 huntools.py install -s subfinder`
-
-4.  **System-wide Installation (Optional):**
-
-    To make `huntools` accessible from anywhere, you can install it to `/usr/local/bin`.
-    ```bash
-    sudo python3 huntools.py install -is
-    ```
-    After this, you can run the tool simply by typing `huntools`.
+# System-wide Installation (e.g. /local/bin)
+sudo python3 huntools.py install -is
+```
 
 ### ⚙️ Customizing Huntools (Configuration)
+```bash
+# Specify a Custom Configuration File Path
+python3 huntools.py config -cp ~/.my_custom_huntools_config/config.yml
 
-Huntools allows you to customize paths for its configuration, binaries, and installed tools.
+# Set a Custom Directory for Downloaded Binaries
+python3 huntools.py config -bp /opt/huntools_binaries
 
-*   **Important Note:** 
-
-Configuration changes are applied *before* running other commands that rely on them. You cannot combine configuration options with other commands (like `install`) in a single line.
-
-1.  **Specify a Custom Configuration File Path:**
-
-    Use this if you want Huntools to use a configuration file from a non-default location.
-    ```bash
-    python3 huntools.py config -cp ~/.my_custom_huntools_config/config.yml
-    ```
-    *   *Default:* `~/.config/huntools/config.yml`
-
-2.  **Set a Custom Directory for Downloaded Binaries:**
-
-    Define where Huntools should store Go binaries and other executables.
-    ```bash
-    python3 huntools.py config -bp /opt/huntools_binaries
-    ```
-    *   *Default:* `~/.huntools/bin`
-
-3.  **Define the Installation Directory for All Tools:**
-
-    This sets the base directory where Huntools will clone Git repositories and manage other tool-specific files.
-    ```bash
-    python3 huntools.py config -ip /opt/huntools_tools
-    ```
-    *   *Default:* `~/.huntools/`
+# Define the Installation Directory for All Tools
+python3 huntools.py config -ip /opt/huntools_tools
+```
 
 ### 🔄 Managing & Maintaining Your Tools
+```bash
+# Update All Tools
+huntools update -ua
 
-Once installed, Huntools helps you keep your arsenal sharp.
+# Update a Single Tool
+huntools update -s <tool_name>
 
-1.  **Update All Tools:**
-    Keep your entire toolkit up-to-date with the latest versions.
-    ```bash
-    huntools update -ua
-    ```
+# Update Huntools Itself
+huntools update -su
 
-2.  **Update a Single Tool:**
-    Update a specific tool if you prefer.
-    ```bash
-    huntools update -s <tool_name>
-    ```
-    *   *Example:* `huntools update -s nuclei`
+# Reinstall a Tool
+huntools reinstall <tool_name>
 
-3.  **Update Huntools Itself:**
-
-    Ensure Huntools is running its latest version.
-    ```bash
-    huntools update -su
-    ```
-
-4.  **Reinstall a Tool:**
-    If a tool becomes corrupted or you need a fresh start, reinstall it.
-    ```bash
-    huntools reinstall <tool_name>
-    ```
-    *   *Example:* `huntools reinstall ffuf`
-
-5.  **Check Tool Health:**
-
-    See which tools are installed and their detected locations.
-    ```bash
-    huntools check -hc
-    ```
+# Check Tool Health
+huntools check -hc
+```
 
 ### 🔍 Viewing Information
+```bash
+# Display All Available Tools
+huntools display -a
 
-Huntools provides commands to quickly access important information.
+# Show Huntools Paths
+huntools show -pl
 
-1.  **Display All Available Tools:**
+# View Changelog
+huntools show -cl
+```
 
-    Get a full list of all the tools Huntools can manage.
-    ```bash
-    huntools display -a
-    ```
+### 🗑️ Removing Tools & Data
+```bash
+# Remove a Single Tool
+huntools remove -rs <tool_name>
 
-2.  **Show Huntools Paths:**
+# Remove All Tools
+huntools remove -ra
 
-    See where Huntools stores its files and configurations.
-    ```bash
-    huntools show -pl
-    ```
-
-3.  **View Changelog:**
-    Catch up on what's new and improved in Huntools.
-    ```bash
-    huntools show -cl
-    ```
-
-### 🗑️ Step 5: Removing Tools & Data
-
-When it's time to clean up, Huntools has you covered.
-
-1.  **Remove a Single Tool:**
-
-    Remove a specific tool from your system. You'll be prompted for confirmation, showing its location and any `sudo` requirements.
-    ```bash
-    huntools remove -rs <tool_name>
-    ```
-    *   *Example:* `huntools remove -rs dalfox`
-
-2.  **Remove All Tools:**
-
-    This will remove all installed tools. You will receive a confirmation prompt showing the number of tools to be removed.
-    ```bash
-    huntools remove -ra
-    ```
-
-3.  **Purge All Huntools Data:**
-
-    The ultimate cleanup! This removes all tools, configurations, and Huntools-related data. A confirmation prompt will appear.
-    ```bash
-    huntools remove -ca
-    ```
-    *   *Note:* Use with extreme caution, as this is irreversible!
+# Purge All Huntools Data
+huntools remove -ca
+```
 
 ### 🐳 Docker Integration
 
-For consistent, isolated, and portable tool management, Huntools supports Docker.
+```bash
+# Generate the Dockerfile
+python3 huntools.py docker -g
+# path 
+python3 huntools.py docker -g -s my_custom_dockerfile
 
-1.  **Generate the Dockerfile:**
+# Build the Docker Image
+docker build -t huntools-env .
 
-    Output a `Dockerfile` tailored for Huntools. By default, it creates a file named `Dockerfile` in your current directory.
-    ```bash
-    python3 huntools.py docker -g
-    ```
-    To specify a different filename, use the `-s` option:
-    ```bash
-    python3 huntools.py docker -g -s my_custom_dockerfile
-    ```
+# Run the Docker Container
+docker run -it huntools-env bash
 
-2.  **Build the Docker Image:**
-    Navigate to the directory containing the generated `Dockerfile` and your `huntools.py` script, then build the Docker image.
-    ```bash
-    docker build -t huntools-env .
-    ```
-    *   *Friendly Tip:* This creates a Docker image named `huntools-env` with all tools pre-installed.
-
-3.  **Run the Docker Container:**
-    *   **Interactive Shell:** Get a shell inside the container with all tools available.
-        ```bash
-        docker run -it huntools-env bash
-        ```
-    *   **Execute a Huntools Command Directly:**
-        ```bash
-        docker run huntools-env huntools <command> [options]
-        # Example: docker run huntools-env huntools display -a
-        ```
+# Execute a Huntools Command Directly
+docker run huntools-env huntools <command> [options]
+```
 
 ---
+
+
+## 🛠️ Available Tools
+
+list of all the tools that Huntools can manage.
+
+### Go Tools
+
+| | | | |
+|---|---|---|---|
+| ffuf | feroxbuster | katana | subfinder |
+| assetfinder | gau | waybackurls | Amass |
+| httpx | GoSpider | ShuffleDNS | Nuclei |
+| DNSx | Naabu | ct-exposer | metabigor |z
+| gf | brutespray | qsreplace | github-subdomains |
+| gitlab-subdomains | anew | notify | unfurl |
+| github-endpoints | subjs | Gxss | crlfuzz |
+| dalfox | puredns | interactsh-client | analyticsrelationships |
+| gotator | roboxtractor | mapcidr | cdncheck |
+| dnstake | tlsx | gitdorks_go | smap |
+| dsieve | inscope | enumerepo | Web-Cache-Vulnerability-Scanner |
+| hakip2host | mantra | crt | s3scanner |
+| nmapurls | shortscan | sns | ppmap |
+| sourcemapper | jsluice | urlfinder | cent |
+| csprecon | VhostFinder | misconfig-mapper | gitleaks |
+| trufflehog |  |  |  |
+
+### Python Tools
+
+|  |  |  |  |
+|---|---|---|---|
+| LinkFinder | OneForAll | cloud_enum | dorks_hunter |
+| Corsy | CMSeeK | fav-up | Oralyzer |
+| JSA | CloudHunter | pydictor | smuggler |
+| regulator | nomore403 | SwaggerSpy | LeakSearch |
+| Spoofy | msftrecon | Scopify | metagoofil |
+| censys | shodan | wafw00f | commix |
+| urless | xnLinkFinder | porch-pirate | p1radup |
+
+### Git Repos
+
+|  |  |
+|---|---|
+| Gf-Patterns | sus_params |
+
+### Package Tools
+
+|  |  |  |  |
+|---|---|---|---|
+| seclists | jq | flameshot | lsd |
+| cewl | nmap | massdns |  |
+
+---
+
 
 ## 🔐 GitHub Token (Optional)
 
