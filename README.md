@@ -46,6 +46,241 @@ for critical operations.
 
 ---
 
+## 🛠️ Available Tools
+
+
+
+Here is a list of all the tools that Huntools can manage, categorized by their function.
+
+
+
+### Reconnaissance: Subdomain Enumeration
+
+
+
+|   |   |   |   |
+
+|---|---|---|---|
+
+| `subfinder` | `assetfinder` | `Amass` | `ShuffleDNS` |
+
+| `github-subdomains` | `gitlab-subdomains` | `puredns` | `OneForAll` |
+
+| `sns` |   |   |   |
+
+
+
+### Reconnaissance: Content Discovery & Crawling
+
+
+
+|   |   |   |
+
+|---|---|---|
+
+| `feroxbuster` | `katana` | `GoSpider` |
+
+
+
+### Reconnaissance: OSINT & Dorking
+
+
+
+|   |   |   |   |
+
+|---|---|---|---|
+
+| `metabigor` | `analyticsrelationships` | `gitdorks_go` | `mantra` |
+
+| `cent` | `dorks_hunter` | `regulator` | `LeakSearch` |
+
+| `metagoofil` | `censys` | `shodan` | `enumerepo` |
+
+
+
+### Reconnaissance: Web & API
+
+
+
+|   |   |   |   |
+
+|---|---|---|---|
+
+| `gau` | `waybackurls` | `httpx` | `github-endpoints` |
+
+| `subjs` | `roboxtractor` | `shortscan` | `ppmap` |
+
+| `sourcemapper` | `jsluice` | `urlfinder` | `csprecon` |
+
+| `VhostFinder` | `LinkFinder` | `fav-up` | `JSA` |
+
+| `SwaggerSpy` | `wafw00f` | `xnLinkFinder` |   |
+
+
+
+### Reconnaissance: Cloud
+
+
+
+|   |   |   |   |
+
+|---|---|---|---|
+
+| `s3scanner` | `cloud_enum` | `CloudHunter` | `msftrecon` |
+
+| `porch-pirate` |   |   |   |
+
+
+
+### Reconnaissance: Network, Port Scanning & TLS
+
+
+
+|   |   |   |   |
+
+|---|---|---|---|
+
+| `Naabu` | `ct-exposer` | `tlsx` | `smap` |
+
+| `nmap` | `crt` |   |   |
+
+
+
+### Fuzzing
+
+
+
+|   |   |   |
+
+|---|---|---|
+
+| `ffuf` | `crlfuzz` | `nomore403` |
+
+
+
+### Vulnerability Scanning: Web (XSS, CORS, Cache, etc.)
+
+
+
+|   |   |   |   |
+
+|---|---|---|---|
+
+| `Gxss` | `dalfox` | `Corsy` | `Oralyzer` |
+
+| `smuggler` | `Spoofy` | `Web-Cache-Vulnerability-Scanner` |   |
+
+
+
+### Vulnerability Scanning: Subdomain Takeover
+
+
+
+|   |
+
+|---|
+
+| `dnstake` |
+
+
+
+### Vulnerability Scanning: Secrets Scanning
+
+
+
+|   |   |
+
+|---|---|
+
+| `gitleaks` | `trufflehog` |
+
+
+
+### Vulnerability Scanning: General & Other
+
+
+
+|   |   |   |   |
+
+|---|---|---|---|
+
+| `Nuclei` | `gf` | `misconfig-mapper` | `CMSeeK` |
+
+
+
+### Exploitation
+
+
+
+|   |
+
+|---|
+
+| `commix` |
+
+
+
+### DNS Tools
+
+
+
+|   |   |   |
+
+|---|---|---|
+
+| `DNSx` | `massdns` | `hakip2host` |
+
+
+
+### Wordlists & Payloads
+
+
+
+|   |   |   |   |
+
+|---|---|---|---|
+
+| `gotator` | `cewl` | `pydictor` | `seclists` |
+
+| `sus_params` | `Gf-Patterns` |   |   |
+
+
+
+### Utilities
+
+
+
+|   |   |   |   |
+
+|---|---|---|---|
+
+| `qsreplace` | `anew` | `notify` | `unfurl` |
+
+| `mapcidr` | `cdncheck` | `dsieve` | `inscope` |
+
+| `nmapurls` | `jq` | `flameshot` | `lsd` |
+
+| `Scopify` | `urless` | `p1radup` |   |
+
+
+
+### Brute Force
+
+
+
+|   |
+
+|---|
+
+| `brutespray` |
+
+
+
+---
+
+
+
+
 
 ```bash
 ~>  sudo python3 huntools.py
