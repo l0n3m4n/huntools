@@ -1301,12 +1301,9 @@ def self_update():
         destination_path = os.path.join(install_dir, "huntools")
 
         if os.path.exists(destination_path):
-            print(f"{Colors.CYAN}System-wide installation detected. Updating executable...{Colors.NC}")
             try:
                 huntools_local_path = os.path.join(git_repo_path, "huntools.py")
                 command = f"sudo cp {huntools_local_path} {destination_path} && sudo chmod +x {destination_path}"
-                
-                print(f"Running command: {Colors.GREEN}{command}{Colors.NC}")
                 
                 process = subprocess.run(command, shell=True, check=False, capture_output=True)
                 
