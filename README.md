@@ -182,6 +182,8 @@ list of all the tools that Huntools can manage.
 | Spoofy | msftrecon | Scopify | metagoofil |
 | censys | shodan | wafw00f | commix |
 | urless | xnLinkFinder | porch-pirate | p1radup |
+| SSRFmap | | | |
+|  |  |  |  |
 
 ### Git Repos
 

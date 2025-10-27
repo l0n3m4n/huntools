@@ -180,6 +180,7 @@ ALL_TOOLS = {
     "massdns": {"type": "package"},
 
     # Python Git Tools
+    "SSRPmap": {"type": "python_git", "url": "https://github.com/swisskyrepo/SSRFmap.git"},
     "LinkFinder": {"type": "python_git", "url": "https://github.com/GerbenJavado/LinkFinder.git"},
     "OneForAll": {"type": "python_git", "url": "https://github.com/shmilylty/OneForAll.git"},
     "cloud_enum": {"type": "python_git", "url": "https://github.com/initstring/cloud_enum.git"},
