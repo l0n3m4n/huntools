@@ -199,7 +199,7 @@ ALL_TOOLS = {
     "msftrecon": {"type": "python_git", "url": "https://github.com/Arcanum-Sec/msftrecon.git"},
     "Scopify": {"type": "python_git", "url": "https://github.com/Arcanum-Sec/Scopify.git"},
     "metagoofil": {"type": "python_git", "url": "https://github.com/opsdisk/metagoofil.git"},
-    "dnsvalidator": {"type": "python_git", "url": "https://github.com/vortexau/dnsvalidator.git"}
+    "dnsvalidator": {"type": "python_git", "url": "https://github.com/vortexau/dnsvalidator.git"},
     "ghauri": {"type": "python_git", "url": "https://github.com/r0oth3x49/ghauri.git"}.
 
 
