@@ -199,21 +199,21 @@ ALL_TOOLS = {
     "msftrecon": {"type": "python_git", "url": "https://github.com/Arcanum-Sec/msftrecon.git"},
     "Scopify": {"type": "python_git", "url": "https://github.com/Arcanum-Sec/Scopify.git"},
     "metagoofil": {"type": "python_git", "url": "https://github.com/opsdisk/metagoofil.git"},
-   
+    "dnsvalidator": {"type": "python_git", "url": "https://github.com/vortexau/dnsvalidator.git"}
+    "ghauri": {"type": "python_git", "url": "https://github.com/r0oth3x49/ghauri.git"}.
+
+
     # Python Pip Tools
     "censys": {"type": "pip"},
     "shodan": {"type": "pip"},
-    #"dnsvalidator": {"type": "pip"},
-    #"interlace": {"type": "pip"},
     "wafw00f": {"type": "pip"},
     "commix": {"type": "pip"},
     "urless": {"type": "pip"},
-    #"ghauri": {"type": "pip"},
     "xnLinkFinder": {"type": "pip"},
-    #"xnldorker": {"type": "pip"},
+    "xnldorker": {"type": "pip"},
     "porch-pirate": {"type": "pip"},
     "p1radup": {"type": "pip"},
-    #"subwiz": {"type": "pip"},
+    #"subwiz": {"type": "pip"}, # need manual installation due to dependency and big package size
 
     # Git Repos
     "Gf-Patterns": {"type": "git", "url": "https://github.com/1ndianl33t/Gf-Patterns.git"},
@@ -1301,9 +1301,12 @@ def self_update():
         destination_path = os.path.join(install_dir, "huntools")
 
         if os.path.exists(destination_path):
+            print(f"{Colors.CYAN}System-wide installation detected. Updating executable...{Colors.NC}")
             try:
                 huntools_local_path = os.path.join(git_repo_path, "huntools.py")
                 command = f"sudo cp {huntools_local_path} {destination_path} && sudo chmod +x {destination_path}"
+                
+                print(f"Running command: {Colors.GREEN}{command}{Colors.NC}")
                 
                 process = subprocess.run(command, shell=True, check=False, capture_output=True)
                 
@@ -1676,4 +1679,4 @@ def main():
         sys.exit(1)
 
 if __name__ == "__main__":
-    main()
+    main()  
