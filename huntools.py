@@ -77,18 +77,6 @@ class Colors:
     BG_BRIGHT_WHITE = '\033[107m'
 
 
-# Global Variables 
-ALL_TOOLS_LOWER_MAP = {name.lower(): name for name in ALL_TOOLS.keys()}
-CONFIG_DIR = os.path.join(os.environ["HOME"], ".config", "huntools")
-
-DEFAULT_HUNTOOLS_INSTALL_DIR = os.path.join(os.environ["HOME"], ".huntools")
-DEFAULT_GO_WORKSPACE_DIR = os.path.join(os.environ["HOME"], "go")
-DEFAULT_GO_BIN_DIR = os.path.join(DEFAULT_GO_WORKSPACE_DIR, "bin")
-DEFAULT_PYTHON_INSTALL_DIR = os.path.join(DEFAULT_HUNTOOLS_INSTALL_DIR, "python")
-DEFAULT_GIT_INSTALL_DIR = os.path.join(DEFAULT_HUNTOOLS_INSTALL_DIR, "git")
-config = {}
-
-
 def _log_error(message):
     clean_message = re.sub(r'\x1b\[([0-9]{1,2};)?([0-9]{1,2})?m', '', message)
     with open("detailed_errors.log", "a") as f:
@@ -234,6 +222,16 @@ ALL_TOOLS = {
 }
 
 
+# Global Variables 
+ALL_TOOLS_LOWER_MAP = {name.lower(): name for name in ALL_TOOLS.keys()}
+CONFIG_DIR = os.path.join(os.environ["HOME"], ".config", "huntools")
+
+DEFAULT_HUNTOOLS_INSTALL_DIR = os.path.join(os.environ["HOME"], ".huntools")
+DEFAULT_GO_WORKSPACE_DIR = os.path.join(os.environ["HOME"], "go")
+DEFAULT_GO_BIN_DIR = os.path.join(DEFAULT_GO_WORKSPACE_DIR, "bin")
+DEFAULT_PYTHON_INSTALL_DIR = os.path.join(DEFAULT_HUNTOOLS_INSTALL_DIR, "python")
+DEFAULT_GIT_INSTALL_DIR = os.path.join(DEFAULT_HUNTOOLS_INSTALL_DIR, "git")
+config = {}
 
 
 def _get_actual_config_file_path():
