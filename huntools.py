@@ -222,8 +222,10 @@ ALL_TOOLS = {
 }
 
 
-# Global Variables 
 ALL_TOOLS_LOWER_MAP = {name.lower(): name for name in ALL_TOOLS.keys()}
+
+
+# Global Variables 
 CONFIG_DIR = os.path.join(os.environ["HOME"], ".config", "huntools")
 
 DEFAULT_HUNTOOLS_INSTALL_DIR = os.path.join(os.environ["HOME"], ".huntools")
