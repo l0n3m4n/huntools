@@ -2,6 +2,7 @@
 
 import os
 import sys
+import re
 import subprocess
 import argparse
 import shutil
@@ -9,7 +10,6 @@ import platform
 import yaml
 import hashlib
 import textwrap
-import re
 import urllib.request
 
 
@@ -96,7 +96,7 @@ def show_banner():
  ░  ░  ░   ░              ░              ░ ░      ░ ░      ░  ░      ░  
                                                                         
            Author: l0n3m4n | Version: 3.3.0 | {tool_count} Hunter Tools
-'''
+\n'''
     print(f"{Colors.CYAN}{banner}{Colors.NC}", end="")
 
 
@@ -909,13 +909,11 @@ def checking_health():
         
         is_installed = False
         
-        # check if the tool is in the PATH
         tool_path = shutil.which(tool_name)
         if tool_path:
             print(f"  - {tool_name}: {Colors.GREEN}Installed{Colors.NC} {Colors.YELLOW}(at {tool_path}){Colors.NC}")
             is_installed = True
         
-        # If not in PATH, check for git repos
         elif tool_type == "python_git":
             repo_path = os.path.join(os.environ["HOME"], ".huntools", "python", tool_name)
             if os.path.exists(repo_path):
@@ -979,7 +977,6 @@ def update_single(tool_name):
 def update_all():
     print(f"{Colors.CYAN}--- Updating all tools ---{Colors.NC}")
     
-    # Update system packages that are part of huntools
     package_manager = get_package_manager()
     package_tools = [name for name, tool in ALL_TOOLS.items() if tool["type"] == "package"]
 
@@ -987,11 +984,9 @@ def update_all():
         print(f"{Colors.GREEN}Updating system packages via {package_manager}...{Colors.NC}")
         try:
             if package_manager == "apt-get":
-                # First update the package list
                 update_command = f"sudo {package_manager} update -y"
                 subprocess.run(update_command, shell=True, check=True, capture_output=True)
                 
-                # Now upgrade only the specific packages
                 install_command = f"sudo {package_manager} install --only-upgrade -y {' '.join(package_tools)}"
                 subprocess.run(install_command, shell=True, check=True, capture_output=True)
 
@@ -1016,10 +1011,9 @@ def update_all():
     else:
         print(f"{Colors.YELLOW}No system packages to update or package manager not supported.{Colors.NC}\n")
 
-    # Update other tools
     for tool_name, tool_info in ALL_TOOLS.items():
         if tool_info["type"] == "package":
-            continue # Already handled
+            continue 
 
         print(f"{Colors.CYAN}Updating {tool_name}...{Colors.NC}")
         tool_type = tool_info["type"]
@@ -1074,8 +1068,8 @@ def get_tool_location_and_command(tool_name, tool_info):
     elif tool_type == "pip":
         tool_location = f"Installed via pip (executable likely in PATH)"
         removal_command = [sys.executable, "-m", "pip", "uninstall", "-y", tool_name]
-        if sys.prefix != sys.base_prefix: # Not in a virtual environment
-            if not os.access(os.path.join(sys.prefix, 'bin'), os.W_OK): # Cannot write to site-packages
+        if sys.prefix != sys.base_prefix: 
+            if not os.access(os.path.join(sys.prefix, 'bin'), os.W_OK): 
                 needs_sudo = True
 
 
@@ -1127,14 +1121,12 @@ def remove_single(tool_name, force=False):
     actual_tool_name = ALL_TOOLS_LOWER_MAP[tool_name_lower]
     tool_info = ALL_TOOLS[actual_tool_name]
 
-    # Check if the tool is actually installed before proceeding
     if not _is_tool_installed(actual_tool_name, tool_info):
         print(f"{Colors.YELLOW}Tool '{tool_name}' is not currently installed. Skipping removal.{Colors.NC}\n")
         return
     
     tool_location, removal_command, needs_sudo = get_tool_location_and_command(actual_tool_name, tool_info)
 
-    # Only show warnings and ask for confirmation if not forced
     if not force:
         if tool_location == "Unknown" or (tool_info["type"] in ["python_git", "git"] and not os.path.exists(tool_location)):
             print(f"{Colors.YELLOW}⚠️  Warning: Could not determine the exact installation path for {tool_name}. Proceeding with generic removal attempt.{Colors.NC}")
@@ -1152,11 +1144,9 @@ def remove_single(tool_name, force=False):
     else:
         print(f"{Colors.GREEN}Force removal of {tool_name} initiated.{Colors.NC}")
 
-    # Execute removal based on tool_type and determined command
     tool_type = tool_info["type"]
     try:
         if tool_type == "go":
-            # Use the configured Go binary directory for removal
             go_bin_dir = config["PATHS"].get("go_bin_dir", os.path.join(os.environ["HOME"], "go", "bin"))
             go_tool_path = os.path.join(go_bin_dir, tool_name)
 
@@ -1168,7 +1158,6 @@ def remove_single(tool_name, force=False):
                     print(f"{Colors.RED}Error removing {tool_name} from {go_tool_path}: {e}{Colors.NC}")
                     print(f"{Colors.YELLOW}If this is a permission error, try running with 'sudo'.{Colors.NC}")
             else:
-                # Fallback to shutil.which if not found in configured GOPATH/bin
                 tool_path_from_which = shutil.which(tool_name)
                 if tool_path_from_which:
                     try:
@@ -1216,7 +1205,6 @@ def get_installed_tools_count():
         if tool_path:
             is_installed = True
         
-        # If not in PATH, check for git repos
         elif tool_info["type"] == "python_git":
             repo_path = os.path.join(DEFAULT_PYTHON_INSTALL_DIR, tool_name)
             if os.path.exists(repo_path):
@@ -1244,11 +1232,9 @@ def remove_all(force=False):
 
     print(f"{Colors.BLUE}--- Removing all installed tools ---{Colors.NC}")
     
-    # Iterate through all tools and remove them using remove_single
     for tool_name in list(ALL_TOOLS.keys()): 
         remove_single(tool_name)
 
-    # Remove huntools specific directories
     huntools_dir = config["PATHS"].get("install_dir", DEFAULT_HUNTOOLS_INSTALL_DIR)
     if os.path.exists(huntools_dir):
         print(f"{Colors.BLUE}Removing huntools installation directory: {huntools_dir}{Colors.NC}")
@@ -1307,19 +1293,16 @@ def self_update():
         return
 
     try:
-        # First, run git pull in the stored repository path
         print(f"{Colors.CYAN}Pulling latest changes from git...{Colors.NC}")
         subprocess.run(["git", "-C", git_repo_path, "pull"], check=True)
         print(f"{Colors.GREEN}huntools updated successfully from git.{Colors.NC}")
 
-        # Now, check if huntools is installed system-wide and update it
         install_dir = get_install_path()
         destination_path = os.path.join(install_dir, "huntools")
 
         if os.path.exists(destination_path):
             print(f"{Colors.CYAN}System-wide installation detected. Updating executable...{Colors.NC}")
             try:
-                # The source is the script inside the git repo
                 huntools_local_path = os.path.join(git_repo_path, "huntools.py")
                 command = f"sudo cp {huntools_local_path} {destination_path} && sudo chmod +x {destination_path}"
                 
@@ -1355,7 +1338,6 @@ def show_path():
     print(f"{Colors.NC}  - Go binary path: {Colors.GREEN}{go_bin_dir}{Colors.NC}")
     print(f"{Colors.NC}  - Config file: {Colors.GREEN}{config_file_path}{Colors.NC}")
 
-# changelog display function for terminal with colors
 def show_changelog():
     url = "https://raw.githubusercontent.com/l0n3m4n/huntools/refs/heads/main/CHANGELOG.md"
     try:
@@ -1365,16 +1347,12 @@ def show_changelog():
         for line in changelog_content.splitlines():
             line = line.rstrip()
 
-            # H1 Heading
             if line.startswith("# "):
                 print(f"{Colors.BOLD_RED}{line.replace('# ', '')}{Colors.NC}")
-            # H2 Heading (Version)
             elif line.startswith("## "):
                 print(f"{Colors.CYAN}{line.replace('## ', '')}{Colors.NC}")
-            # H3 Sub-headings
             elif line.startswith("### "):
                 print(f"{Colors.MAGENTA}{line.replace('### ', '')}{Colors.NC}")
-            # List items
             elif line.startswith("- "):
                 formatted_line = line.replace("- ", f"{Colors.GREEN}- {Colors.NC}")
                 formatted_line = re.sub(r'\*\*(.*?)\*\*', f'{Colors.YELLOW}\1{Colors.NC}', formatted_line) # Bold
@@ -1382,10 +1360,8 @@ def show_changelog():
                 formatted_line = re.sub(r'\*(.*?)\*', f'{Colors.ITALIC}\1{Colors.NC}', formatted_line) # Italics with asterisk
                 formatted_line = re.sub(r'`(.*?)`', f'{Colors.BLUE}\1{Colors.NC}', formatted_line) # Inline code
                 print(formatted_line)
-            # Empty lines
             elif not line.strip():
                 print(line)
-            # Default for other lines (e.g. introductory text, links)
             else:
                 formatted_line = line
                 formatted_line = re.sub(r'\*\*(.*?)\*\*', f'{Colors.YELLOW}\1{Colors.NC}', formatted_line) # Bold
@@ -1464,23 +1440,20 @@ CMD ["bash"]
 class CustomHelpFormatter(argparse.HelpFormatter):
     def _format_action(self, action):
         if isinstance(action, argparse._SubParsersAction):
-            parts = [""] # Add a blank line after the title
-            # find the max length of the subparser command
+            parts = [""] 
             max_len = 0
             for subparser_action in action._choices_actions:
                 max_len = max(max_len, len(subparser_action.dest))
 
             for subparser_action in action._choices_actions:
-                if subparser_action.help: # Access help from the _SubParserAction object
+                if subparser_action.help: 
                     parts.append(f"    {Colors.YELLOW}{subparser_action.dest:<{max_len}}{Colors.NC}    {Colors.GREEN}{subparser_action.help}{Colors.NC}") # Add more indentation
             return "\n".join(parts)
         else:
             action_header = self._format_action_invocation(action)
             
-            # Format the help text (description)
             help_text = self._expand_help(action)
             
-            # Combine them on a single line with initial indentation, and add a newline at the end
             if help_text:
                 return f"  {action_header} {help_text}\n"
             else:
