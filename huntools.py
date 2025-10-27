@@ -796,70 +796,75 @@ def install_all():
 def install_single(tool_name):
     print(f"{Colors.CYAN}Attempting to install single tool: {tool_name}{Colors.NC}")
 
-    if tool_name not in ALL_TOOLS:
+    tool_name_lower = tool_name.lower()
+    if tool_name_lower not in ALL_TOOLS_LOWER_MAP:
         print(f"\n{Colors.RED}Error: Tool '{tool_name}' not found.{Colors.NC}")
         print(f"{Colors.YELLOW}run 'huntools display -a' to see the list of available tools.{Colors.NC}\n")
         return
 
-    existing_path = shutil.which(tool_name)
+    actual_tool_name = ALL_TOOLS_LOWER_MAP[tool_name_lower]
+    tool = ALL_TOOLS[actual_tool_name]
+
+    existing_path = shutil.which(actual_tool_name)
     if existing_path:
-        print(f"{Colors.GREEN}{tool_name} is already installed at {Colors.MAGENTA}{existing_path}{Colors.GREEN}. Skipping installation.{Colors.NC}")
+        print(f"{Colors.GREEN}{actual_tool_name} is already installed at {Colors.MAGENTA}{existing_path}{Colors.GREEN}. Skipping installation.{Colors.NC}")
         return
 
-    tool = ALL_TOOLS[tool_name]
     tool_type = tool["type"]
 
     if tool_type == "go":
-        print(f"{Colors.CYAN}Installing Go tool: {tool_name}{Colors.NC}")
+        print(f"{Colors.CYAN}Installing Go tool: {actual_tool_name}{Colors.NC}")
         subprocess.run(tool["install"], shell=True)
     
     elif tool_type == "package":
-        print(f"{Colors.CYAN}Installing package: {tool_name}{Colors.NC}")
+        print(f"{Colors.CYAN}Installing package: {actual_tool_name}{Colors.NC}")
         package_manager = get_package_manager()
         if not package_manager:
             print(f"{Colors.RED}Unsupported OS for package installation.{Colors.NC}")
             return
         if package_manager == "apt-get":
-            subprocess.run(f"sudo {package_manager} install -y {tool_name}", shell=True)
+            subprocess.run(f"sudo {package_manager} install -y {actual_tool_name}", shell=True)
         elif package_manager == "yum":
-            subprocess.run(f"sudo {package_manager} install -y {tool_name}", shell=True)
+            subprocess.run(f"sudo {package_manager} install -y {actual_tool_name}", shell=True)
         elif package_manager == "pacman":
-            subprocess.run(f"sudo {package_manager} -S --noconfirm {tool_name}", shell=True)
+            subprocess.run(f"sudo {package_manager} -S --noconfirm {actual_tool_name}", shell=True)
         elif package_manager == "brew":
-            subprocess.run(f"{package_manager} install {tool_name}", shell=True)
+            subprocess.run(f"{package_manager} install {actual_tool_name}", shell=True)
 
     elif tool_type == "python_git":
-        print(f"{Colors.CYAN}Installing Python tool from git: {tool_name}{Colors.NC}")
+        print(f"{Colors.CYAN}Installing Python tool from git: {actual_tool_name}{Colors.NC}")
         install_dir = os.path.join(os.environ["HOME"], ".huntools", "python")
         os.makedirs(install_dir, exist_ok=True)
         repo_url = tool["url"]
-        repo_path = os.path.join(install_dir, tool_name)
+        repo_path = os.path.join(install_dir, actual_tool_name)
         subprocess.run(["git", "clone", repo_url, repo_path])
         
 
 
     elif tool_type == "pip":
-        print(f"{Colors.CYAN}Installing Python tool from pip: {tool_name}{Colors.NC}")
-        subprocess.run([sys.executable, "-m", "pip", "install", tool_name])
+        print(f"{Colors.CYAN}Installing Python tool from pip: {actual_tool_name}{Colors.NC}")
+        subprocess.run([sys.executable, "-m", "pip", "install", actual_tool_name])
 
     elif tool_type == "git":
-        print(f"{Colors.CYAN}Cloning git repository: {tool_name}{Colors.NC}")
+        print(f"{Colors.CYAN}Cloning git repository: {actual_tool_name}{Colors.NC}")
 
 def reinstall_single(tool_name, force=False):
     print(f"{Colors.CYAN}--- Reinstalling {tool_name} ---{Colors.NC}")
 
-    if tool_name not in ALL_TOOLS:
+    tool_name_lower = tool_name.lower()
+    if tool_name_lower not in ALL_TOOLS_LOWER_MAP:
         print(f"\n{Colors.RED}Error: Tool '{tool_name}' not found.{Colors.NC}")
         print(f"{Colors.YELLOW}run 'huntools display --all' to see the list of available tools.{Colors.NC}\n")
         return
 
-    remove_single(tool_name, force)
-    install_single(tool_name)
-    print(f"\n{Colors.GREEN}--- Reinstallation of {tool_name} complete! ---{Colors.NC}")
+    actual_tool_name = ALL_TOOLS_LOWER_MAP[tool_name_lower]
+    remove_single(actual_tool_name, force)
+    install_single(actual_tool_name)
+    print(f"\n{Colors.GREEN}--- Reinstallation of {actual_tool_name} complete! ---{Colors.NC}")
 
 def display_all():
     print(f"{Colors.CYAN}Available tools:{Colors.NC}")
-    all_tools = sorted(ALL_TOOLS.keys())
+    all_tools = sorted(ALL_TOOLS.keys(), key=str.lower)
     if not all_tools:
         print(f"{Colors.YELLOW}  No tools available.{Colors.NC}")
         return
