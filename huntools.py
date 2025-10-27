@@ -76,6 +76,19 @@ class Colors:
     BG_BRIGHT_CYAN = '\033[106m'
     BG_BRIGHT_WHITE = '\033[107m'
 
+
+# Global Variables 
+ALL_TOOLS_LOWER_MAP = {name.lower(): name for name in ALL_TOOLS.keys()}
+CONFIG_DIR = os.path.join(os.environ["HOME"], ".config", "huntools")
+
+DEFAULT_HUNTOOLS_INSTALL_DIR = os.path.join(os.environ["HOME"], ".huntools")
+DEFAULT_GO_WORKSPACE_DIR = os.path.join(os.environ["HOME"], "go")
+DEFAULT_GO_BIN_DIR = os.path.join(DEFAULT_GO_WORKSPACE_DIR, "bin")
+DEFAULT_PYTHON_INSTALL_DIR = os.path.join(DEFAULT_HUNTOOLS_INSTALL_DIR, "python")
+DEFAULT_GIT_INSTALL_DIR = os.path.join(DEFAULT_HUNTOOLS_INSTALL_DIR, "git")
+config = {}
+
+
 def _log_error(message):
     clean_message = re.sub(r'\x1b\[([0-9]{1,2};)?([0-9]{1,2})?m', '', message)
     with open("detailed_errors.log", "a") as f:
@@ -166,7 +179,7 @@ ALL_TOOLS = {
     "csprecon": {"type": "go", "install": "go install github.com/edoardottt/csprecon/cmd/csprecon@latest"},
     "VhostFinder": {"type": "go", "install": "go install -v github.com/wdahlenburg/VhostFinder@latest"},
     "misconfig-mapper": {"type": "go", "install": "go install github.com/intigriti/misconfig-mapper/cmd/misconfig-mapper@latest"},
-    "gitleaks": {"type": "go", "install": "git clone https://github.com/gitleaks/gitleaks.git /tmp/gitleaks_build && cd /tmp/gitleaks_build && make build && mv ./gitleaks \"$GOBIN\" && rm -rf /tmp/gitleaks_build"},
+    "gitleaks": {"type": "go", "install": "go install -v github.com/zricethezav/gitleaks/v8@latest"},
     "trufflehog": {"type": "go", "install": "go install -v github.com/trufflesecurity/trufflehog/v3@latest"},
 
     # Package Tools
@@ -221,15 +234,7 @@ ALL_TOOLS = {
 }
 
 
-ALL_TOOLS_LOWER_MAP = {name.lower(): name for name in ALL_TOOLS.keys()}
-CONFIG_DIR = os.path.join(os.environ["HOME"], ".config", "huntools")
 
-DEFAULT_HUNTOOLS_INSTALL_DIR = os.path.join(os.environ["HOME"], ".huntools")
-DEFAULT_GO_WORKSPACE_DIR = os.path.join(os.environ["HOME"], "go")
-DEFAULT_GO_BIN_DIR = os.path.join(DEFAULT_GO_WORKSPACE_DIR, "bin")
-DEFAULT_PYTHON_INSTALL_DIR = os.path.join(DEFAULT_HUNTOOLS_INSTALL_DIR, "python")
-DEFAULT_GIT_INSTALL_DIR = os.path.join(DEFAULT_HUNTOOLS_INSTALL_DIR, "git")
-config = {}
 
 def _get_actual_config_file_path():
     default_config_file = os.path.join(CONFIG_DIR, "config.yml")
