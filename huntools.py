@@ -169,15 +169,12 @@ ALL_TOOLS = {
     "trufflehog": {"type": "go", "install": "rm -rf /tmp/trufflehog && git clone https://github.com/trufflesecurity/trufflehog.git /tmp/trufflehog && cd /tmp/trufflehog && make && mv /tmp/trufflehog/bin/trufflehog $HOME/.huntools/go", "size": "large"}, # NOTE: manual installation large size 
     "massdns": {"type": "go", "install": "rm -rf /tmp/massdns && git clone https://github.com/blechschmidt/massdns.git /tmp/massdns && cd /tmp/massdns && make && mv /tmp/massdns/bin/massdns $HOME/.huntools/go/"},
     "feroxbuster": {"type": "go", "install": "curl -sL https://raw.githubusercontent.com/epi052/feroxbuster/main/install-nix.sh | bash -s -- $HOME/.huntools/go"},
-
-
+    "unfurl": {"type": "go", "install": "go -v install github.com/tomnomnom/unfurl@latest"},
 
     # Package Tools
-    "jq": {"type": "package"},
-    "flameshot": {"type": "package"},
-    "lsd": {"type": "package"},
-    "cewl": {"type": "package"},
-    "nmap": {"type": "package"},
+    "jq": {"type": "package"}, # command-line JSON processor
+    "flameshot": {"type": "package"}, # screenshot tool
+    "lsd": {"type": "package"}, # debian package name is 'lsd', for arch is 'lsd-git' 
 
     # Python Git Tools
     "SSRFmap": {"type": "python_git", "url": "https://github.com/swisskyrepo/SSRFmap.git"},
@@ -217,6 +214,8 @@ ALL_TOOLS = {
     "p1radup": {"type": "python_git", "url": "https://github.com/iambouali/p1radup.git"},
     "subwiz": {"type": "python_git", "url": "https://github.com/hadriansecurity/subwiz.git", "size": "large"}, # NOTE: need manual installation due to dependency and big package size
  
+    # pip install 
+    "waymore": {"type": "pip", "install": "waymore"}, 
 
     # Git Repos
     "crt-sh": {"type": "git", "url": "https://github.com/az7rb/crt.sh.git"},
