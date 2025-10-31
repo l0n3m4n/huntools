@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [3.4.0] - 2025-10-31
+
+### Added
+- User prompt for large Python tools: Implemented a confirmation prompt before installing large Python tools (e.g., `seclists`, `subwiz`) to allow users to skip them.
+- Poetry installation: Added automatic installation of Poetry as a system dependency.
+
+### Changed
+- Shodan installation: Corrected the GitHub repository URL for Shodan.
+- Python tools installation: Modified the `install_python_tools` function to install `python_git` tools using Poetry.
+- Go tools installation: Changed `urless`, `xnLinkFinder`, `xnldorker`, and `porch-pirate` to be installed as `go` type tools, executing `pip install git+...` commands directly.
+- Feroxbuster installation: Updated the installation method to use `curl` for direct binary download and installation.
+- Trufflehog installation: Added `rm -rf` for the temporary directory to prevent `git clone` errors.
+- Health check: Improved `checking_health` function to be case-insensitive and correctly identify `go` tools installed in `$HOME/.huntools/go`.
+
+### Removed
+- `setup.py` installation: Removed the deprecated `setup.py` installation method for Python tools.
+
+### Fixed
+- `trufflehog` installation: Resolved `git clone` error by adding `rm -rf` for the temporary directory.
+- `massdns` installation: Resolved `git clone` error by adding `rm -rf` for the temporary directory.
+- `pydictor` syntax error: Removed a stray `git clone` command from the `ALL_TOOLS` dictionary.
+- `wafw00f` installation: Added `python3-setuptools` to system dependencies to resolve `ModuleNotFoundError`.
+- `p1radup` installation: Changed to manual installation due to permission issues with `setup.py install`.
+
+
 ## [3.3.0] - 2025-10-26
 
 ### Added

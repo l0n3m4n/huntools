@@ -79,7 +79,7 @@ class Colors:
 
 def _log_error(message):
     clean_message = re.sub(r'\x1b\[([0-9]{1,2};)?([0-9]{1,2})?m', '', message)
-    with open("detailed_errors.log", "a") as f:
+    with open("errors.log", "a") as f:
         f.write(clean_message + "\n")
 
 
@@ -96,7 +96,7 @@ def show_banner():
  ░  ░░ ░ ░░░ ░ ░    ░   ░ ░   ░      ░ ░ ░ ▒  ░ ░ ░ ▒    ░ ░   ░  ░  ░  
  ░  ░  ░   ░              ░              ░ ░      ░ ░      ░  ░      ░  
                                                                         
-           Author: l0n3m4n | Version: 3.3.0 | {tool_count} Hunter Tools
+           Author: l0n3m4n | Version: 3.4.0 | {tool_count} Hunter Tools
 \n'''
     print(f"{Colors.CYAN}{banner}{Colors.NC}", end="")
 
@@ -108,7 +108,6 @@ ALL_TOOLS = {
     
     # Go Tools
     "ffuf": {"type": "go", "install": "go install -v github.com/ffuf/ffuf/v2@latest"},
-    "feroxbuster": {"type": "go", "install": "go install -v github.com/epi052/feroxbuster@latest"},
     "katana": {"type": "go", "install": "go install -v github.com/projectdiscovery/katana/cmd/katana@latest"},
     "subfinder": {"type": "go", "install": "go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest"},
     "assetfinder": {"type": "go", "install": "go install -v github.com/tomnomnom/assetfinder@latest"},
@@ -122,7 +121,6 @@ ALL_TOOLS = {
     "Nuclei": {"type": "go", "install": "go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest"},
     "DNSx": {"type": "go", "install": "go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest"},
     "Naabu": {"type": "go", "install": "go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest"},
-    "ct-exposer": {"type": "go", "install": "go get -u github.com/crt.sh/ct-exposer"},
     "metabigor": {"type": "go", "install": "go install -v github.com/j3ssie/metabigor@latest"},
     "gf": {"type": "go", "install": "go install -v github.com/tomnomnom/gf@latest"},
     "brutespray": {"type": "go", "install": "go install -v github.com/x90skysn3k/brutespray@latest"},
@@ -168,16 +166,18 @@ ALL_TOOLS = {
     "VhostFinder": {"type": "go", "install": "go install -v github.com/wdahlenburg/VhostFinder@latest"},
     "misconfig-mapper": {"type": "go", "install": "go install github.com/intigriti/misconfig-mapper/cmd/misconfig-mapper@latest"},
     "gitleaks": {"type": "go", "install": "go install -v github.com/zricethezav/gitleaks/v8@latest"},
-    "trufflehog": {"type": "go", "install": "go install -v github.com/trufflesecurity/trufflehog/v3@latest"},
+    "trufflehog": {"type": "go", "install": "rm -rf /tmp/trufflehog && git clone https://github.com/trufflesecurity/trufflehog.git /tmp/trufflehog && cd /tmp/trufflehog && make && mv /tmp/trufflehog/bin/trufflehog $HOME/.huntools/go", "size": "large"}, # NOTE: manual installation large size 
+    "massdns": {"type": "go", "install": "rm -rf /tmp/massdns && git clone https://github.com/blechschmidt/massdns.git /tmp/massdns && cd /tmp/massdns && make && mv /tmp/massdns/bin/massdns $HOME/.huntools/go/"},
+    "feroxbuster": {"type": "go", "install": "curl -sL https://raw.githubusercontent.com/epi052/feroxbuster/main/install-nix.sh | bash -s -- $HOME/.huntools/go"},
+
+
 
     # Package Tools
-    "seclists": {"type": "package"},
     "jq": {"type": "package"},
     "flameshot": {"type": "package"},
     "lsd": {"type": "package"},
     "cewl": {"type": "package"},
     "nmap": {"type": "package"},
-    "massdns": {"type": "package"},
 
     # Python Git Tools
     "SSRPmap": {"type": "python_git", "url": "https://github.com/swisskyrepo/SSRFmap.git"},
@@ -191,7 +191,7 @@ ALL_TOOLS = {
     "Oralyzer": {"type": "python_git", "url": "https://github.com/r0075h3ll/Oralyzer.git"},
     "JSA": {"type": "python_git", "url": "https://github.com/w9w/JSA.git"},
     "CloudHunter": {"type": "python_git", "url": "https://github.com/belane/CloudHunter.git"},
-    "pydictor": {"type": "python_git", "url": "https://github.com/LandGrey/pydictor.git"},
+    "pydictor": {"type": "python_git", "url": "https://github.com/landgrey/pydictor.git"},
     "smuggler": {"type": "python_git", "url": "https://github.com/defparam/smuggler.git"},
     "regulator": {"type": "python_git", "url": "https://github.com/cramppet/regulator.git"},
     "nomore403": {"type": "python_git", "url": "https://github.com/devploit/nomore403.git"},
@@ -203,21 +203,23 @@ ALL_TOOLS = {
     "metagoofil": {"type": "python_git", "url": "https://github.com/opsdisk/metagoofil.git"},
     "dnsvalidator": {"type": "python_git", "url": "https://github.com/vortexau/dnsvalidator.git"},
     "ghauri": {"type": "python_git", "url": "https://github.com/r0oth3x49/ghauri.git"},
-
-
+    "seclists": {"type": "python_git", "url": "https://github.com/danielmiessler/SecLists.git", "size": "large"}, # NOTE: manual intallation due to package size (2.6gb)
+    
     # Python Pip Tools
-    "censys": {"type": "pip"},
-    "shodan": {"type": "pip"},
-    "wafw00f": {"type": "pip"},
-    "commix": {"type": "pip"},
-    "urless": {"type": "pip"},
-    "xnLinkFinder": {"type": "pip"},
-    "xnldorker": {"type": "pip"},
-    "porch-pirate": {"type": "pip"},
-    "p1radup": {"type": "pip"},
-    #"subwiz": {"type": "pip"}, # need manual installation due to dependency and big package size
+    "censys": {"type": "python_git", "url": "https://github.com/censys/censys-python.git"},
+    "shodan": {"type": "python_git", "url": "https://github.com/achillean/shodan-python.git"},
+    "wafw00f": {"type": "python_git", "url": "https://github.com/enablesecurity/wafw00f.git"},
+    "commix": {"type": "python_git", "url": "https://github.com/commixproject/commix.git"},
+    "urless": {"type": "python_git", "url": "https://github.com/xnl-h4ck3r/urless.git"},
+    "xnLinkFinder": {"type": "python_git", "url": "https://github.com/xnl-h4ck3r/xnLinkFinder.git"},
+    "xnldorker": {"type": "python_git", "url": "https://github.com/xnl-h4ck3r/xnldorker.git"},
+    "porch-pirate": {"type": "python_git", "url": "https://github.com/MandConsultingGroup/porch-pirate.git"},
+    "p1radup": {"type": "python_git", "url": "https://github.com/iambouali/p1radup.git"},
+    "subwiz": {"type": "python_git", "url": "https://github.com/hadriansecurity/subwiz.git", "size": "large"}, # NOTE: need manual installation due to dependency and big package size
+ 
 
     # Git Repos
+    "crt-sh": {"type": "git", "url": "https://github.com/az7rb/crt.sh.git"},
     "Gf-Patterns": {"type": "git", "url": "https://github.com/1ndianl33t/Gf-Patterns.git"},
     "sus_params": {"type": "git", "url": "https://github.com/g0ldencybersec/sus_params.git"},
 }
@@ -314,10 +316,10 @@ def install_dependencies():
         return False
 
     deps = {
-        "apt-get": "python3 python3-pip python3-venv git curl wget ruby nmap build-essential gcc cmake libpcap-dev dnsutils libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev",
-        "yum": "python3 python3-pip python3-devel git curl wget ruby nmap gcc gcc-c++ make cmake pcap-devel dnsutils openssl-devel libffi-devel libxml2-devel libxslt-devel zlib-devel",
-        "pacman": "python python-pip python-virtualenv git curl wget ruby nmap base-devel gcc cmake libpcap dnsutils openssl libffi libxml2 libxslt zlib",
-        "brew": "python git curl wget ruby nmap cmake"
+        "apt-get": "python3 python3-pip python3-venv git ruby build-essential gcc cmake libpcap-dev dnsutils libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev python3-setuptools rustc cargo",
+        "yum": "python3 python3-pip python3-devel git ruby gcc gcc-c++ make cmake pcap-devel dnsutils openssl-devel libffi-devel libxml2-devel libxslt-devel zlib-devel python3-setuptools rust cargo",
+        "pacman": "python python-pip python-virtualenv git ruby base-devel gcc cmake libpcap dnsutils openssl libffi libxml2 libxslt zlib python-setuptools rust",
+        "brew": "python git curl wget ruby nmap cmake rust"
     }
 
     try:
@@ -350,6 +352,22 @@ def install_dependencies():
             subprocess.run(f"{package_manager} install {deps[package_manager]}", shell=True, check=True, capture_output=True)
         
         print(f"{Colors.GREEN}System dependencies installed successfully.{Colors.NC}\n")
+
+        # Install Poetry
+        print(f"{Colors.CYAN}--- Installing Poetry ---{Colors.NC}")
+        if shutil.which("poetry"):
+            print(f"{Colors.GREEN}Poetry is already installed.{Colors.NC}\n")
+        else:
+            try:
+                subprocess.run("curl -sSL https://install.python-poetry.org | python3 -", shell=True, check=True, capture_output=True)
+                print(f"{Colors.GREEN}Poetry installed successfully.{Colors.NC}\n")
+            except subprocess.CalledProcessError as e:
+                error_message = f"Error installing Poetry: {e}\nStderr: {e.stderr.decode()}"
+                _log_error(error_message)
+                print(f"{Colors.RED}Error installing Poetry: {e}{Colors.NC}")
+                print(f"{Colors.RED}Stderr: {e.stderr.decode()}{Colors.NC}")
+                return False
+
         return True
     except subprocess.CalledProcessError as e:
         error_message = f"Error installing dependencies: {e}\nStderr: {e.stderr.decode()}"
@@ -498,6 +516,13 @@ def _install_tools(title, tools, install_function):
     fail_count = 0
 
     for tool in tools:
+        tool_info = ALL_TOOLS.get(tool, {})
+        if tool_info.get("size") == "large":
+            response = input(f"{Colors.YELLOW}The tool '{tool}' is large. Do you want to install it? (y/n): {Colors.NC}").lower()
+            if response != 'y':
+                print(f"{Colors.YELLOW}Skipping installation of {tool}.{Colors.NC}")
+                continue
+
         existing_path = shutil.which(tool)
         if existing_path:
             print(f"{Colors.GREEN}{tool} is already installed at {Colors.MAGENTA}{existing_path}{Colors.GREEN}.{Colors.NC}")
@@ -550,13 +575,8 @@ def install_packages():
 
     return _install_tools("Installing packages", package_tools, _install_package)
 
-def install_python_tools():
-
-    print(f"{Colors.CYAN}--- Installing Python tools ---{Colors.NC}")
-
-    
-    # Git tools
-    python_git_tools = {name: tool["url"] for name, tool in ALL_TOOLS.items() if tool["type"] == "python_git"}
+def install_python_tools():   
+    python_git_tools = {name: tool for name, tool in ALL_TOOLS.items() if tool["type"] == "python_git"}
     install_dir = config["PATHS"].get("python_dir", DEFAULT_PYTHON_INSTALL_DIR)
     os.makedirs(install_dir, exist_ok=True)
     git_success_count = 0
@@ -564,7 +584,13 @@ def install_python_tools():
 
     print(f"\n{Colors.CYAN}--- Installing Python tools from Git ---{Colors.NC}")
 
-    for tool_name, repo_url in python_git_tools.items():
+    for tool_name, tool_info in python_git_tools.items():
+        if tool_info.get("size") == "large":
+            response = input(f"{Colors.YELLOW}The tool '{tool_name}' is large. Do you want to install it? (y/n): {Colors.NC}").lower()
+            if response != 'y':
+                print(f"{Colors.YELLOW}Skipping installation of {tool_name}.{Colors.NC}")
+                continue
+
         print(f"{Colors.CYAN}Installing {tool_name} from git...{Colors.NC}")
         repo_path = os.path.join(install_dir, tool_name)
         if os.path.exists(repo_path):
@@ -577,8 +603,14 @@ def install_python_tools():
                 git_success_count += 1
                 continue
         try:
-            subprocess.run(["git", "clone", repo_url, repo_path], check=True, capture_output=True)
+            subprocess.run(["git", "clone", tool_info["url"], repo_path], check=True, capture_output=True)
             print(f"{Colors.GREEN}{tool_name} cloned successfully.{Colors.NC}")
+
+            if os.path.exists(os.path.join(repo_path, "poetry.lock")):
+                print(f"{Colors.CYAN}Installing dependencies with poetry...{Colors.NC}")
+                subprocess.run(["poetry", "install"], cwd=repo_path, check=True, capture_output=True)
+                print(f"{Colors.GREEN}Dependencies installed successfully.{Colors.NC}")
+
             git_success_count += 1
 
         except subprocess.CalledProcessError as e:
@@ -593,7 +625,6 @@ def install_python_tools():
     def _install_pip_tool(tool):
         subprocess.run([sys.executable, "-m", "pip", "install", "--break-system-packages", tool], check=True, capture_output=True)
     
-    print(f"\n{Colors.CYAN}--- Installing Python tools from Pip ---{Colors.NC}")
     pip_install_success = _install_tools("Installing Python tools from Pip", pip_tools, _install_pip_tool)
     
     print(f"\n{Colors.CYAN}--- Python tools installation summary ---{Colors.NC}")
@@ -915,21 +946,30 @@ def checking_health():
         
         is_installed = False
         
-        tool_path = shutil.which(tool_name)
+        tool_path = shutil.which(tool_name) or shutil.which(tool_name.lower())
         if tool_path:
             print(f"  - {tool_name}: {Colors.GREEN}Installed{Colors.NC} {Colors.YELLOW}(at {tool_path}){Colors.NC}")
             is_installed = True
         
         elif tool_type == "python_git":
-            repo_path = os.path.join(os.environ["HOME"], ".huntools", "python", tool_name)
+            repo_path = os.path.join(config["PATHS"].get("python_dir", DEFAULT_PYTHON_INSTALL_DIR), tool_name)
             if os.path.exists(repo_path):
                 print(f"  - {tool_name}: {Colors.GREEN}Installed (Python Git Repo){Colors.NC} {Colors.YELLOW}(at {repo_path}){Colors.NC}")
                 is_installed = True
         
         elif tool_type == "git":
-            repo_path = os.path.join(os.environ["HOME"], ".huntools", "git", tool_name)
+            repo_path = os.path.join(config["PATHS"].get("git_dir", DEFAULT_GIT_INSTALL_DIR), tool_name)
             if os.path.exists(repo_path):
                 print(f"  - {tool_name}: {Colors.GREEN}Installed (Git Repo){Colors.NC} {Colors.YELLOW}(at {repo_path}){Colors.NC}")
+                is_installed = True
+        elif tool_type == "go":
+            go_bin_dir = config["PATHS"].get("go_bin_dir", DEFAULT_GO_BIN_DIR)
+            huntools_go_bin_dir = os.path.join(os.environ["HOME"], ".huntools", "go")
+            if os.path.exists(os.path.join(go_bin_dir, tool_name.lower())):
+                print(f"  - {tool_name}: {Colors.GREEN}Installed{Colors.NC} {Colors.YELLOW}(at {os.path.join(go_bin_dir, tool_name.lower())}){Colors.NC}")
+                is_installed = True
+            elif os.path.exists(os.path.join(huntools_go_bin_dir, tool_name.lower())):
+                print(f"  - {tool_name}: {Colors.GREEN}Installed{Colors.NC} {Colors.YELLOW}(at {os.path.join(huntools_go_bin_dir, tool_name.lower())}){Colors.NC}")
                 is_installed = True
 
         if is_installed:
