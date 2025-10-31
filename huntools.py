@@ -96,7 +96,7 @@ def show_banner():
  ░  ░░ ░ ░░░ ░ ░    ░   ░ ░   ░      ░ ░ ░ ▒  ░ ░ ░ ▒    ░ ░   ░  ░  ░  
  ░  ░  ░   ░              ░              ░ ░      ░ ░      ░  ░      ░  
                                                                         
-           Author: l0n3m4n | Version: 3.4.0 | {tool_count} Hunter Tools
+           Author: l0n3m4n | Version: 3.4.1 | {tool_count} Hunter Tools
 \n'''
     print(f"{Colors.CYAN}{banner}{Colors.NC}", end="")
 
@@ -180,7 +180,7 @@ ALL_TOOLS = {
     "nmap": {"type": "package"},
 
     # Python Git Tools
-    "SSRPmap": {"type": "python_git", "url": "https://github.com/swisskyrepo/SSRFmap.git"},
+    "SSRFmap": {"type": "python_git", "url": "https://github.com/swisskyrepo/SSRFmap.git"},
     "LinkFinder": {"type": "python_git", "url": "https://github.com/GerbenJavado/LinkFinder.git"},
     "OneForAll": {"type": "python_git", "url": "https://github.com/shmilylty/OneForAll.git"},
     "cloud_enum": {"type": "python_git", "url": "https://github.com/initstring/cloud_enum.git"},
@@ -281,7 +281,7 @@ def save_config():
 
 def _is_tool_installed(tool_name, tool_info):
     # Check if the tool is in the PATH
-    if shutil.which(tool_name):
+    if shutil.which(tool_name.lower()):
         return True
     
     tool_type = tool_info["type"]
@@ -523,7 +523,7 @@ def _install_tools(title, tools, install_function):
                 print(f"{Colors.YELLOW}Skipping installation of {tool}.{Colors.NC}")
                 continue
 
-        existing_path = shutil.which(tool)
+        existing_path = shutil.which(tool.lower())
         if existing_path:
             print(f"{Colors.GREEN}{tool} is already installed at {Colors.MAGENTA}{existing_path}{Colors.GREEN}.{Colors.NC}")
             success_count += 1
@@ -1099,12 +1099,12 @@ def get_tool_location_and_command(tool_name, tool_info):
     needs_sudo = False
 
     if tool_type == "go":
-        gopath_bin = os.path.join(config["PATHS"].get("go_bin_dir", DEFAULT_GO_BIN_DIR), tool_name)
+        gopath_bin = os.path.join(config["PATHS"].get("go_bin_dir", DEFAULT_GO_BIN_DIR), tool_name.lower())
         if os.path.exists(gopath_bin):
             tool_location = gopath_bin
             removal_command = ["rm", gopath_bin]
         else:
-            tool_path = shutil.which(tool_name)
+            tool_path = shutil.which(tool_name.lower())
             if tool_path:
                 tool_location = tool_path
                 removal_command = ["rm", tool_path]
@@ -1194,7 +1194,7 @@ def remove_single(tool_name, force=False):
     try:
         if tool_type == "go":
             go_bin_dir = config["PATHS"].get("go_bin_dir", os.path.join(os.environ["HOME"], "go", "bin"))
-            go_tool_path = os.path.join(go_bin_dir, tool_name)
+            go_tool_path = os.path.join(go_bin_dir, tool_name.lower())
 
             if os.path.exists(go_tool_path):
                 try:
@@ -1204,7 +1204,7 @@ def remove_single(tool_name, force=False):
                     print(f"{Colors.RED}Error removing {tool_name} from {go_tool_path}: {e}{Colors.NC}")
                     print(f"{Colors.YELLOW}If this is a permission error, try running with 'sudo'.{Colors.NC}")
             else:
-                tool_path_from_which = shutil.which(tool_name)
+                tool_path_from_which = shutil.which(tool_name.lower())
                 if tool_path_from_which:
                     try:
                         os.remove(tool_path_from_which)
