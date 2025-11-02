@@ -47,7 +47,8 @@ for critical operations.
 ---
 
 ![banner](assets/banner.png) 
-![huntools](assets/huntools.png)
+<img src="assets/huntools1.png" style="margin:0;padding:0;display:inline-block;vertical-align:middle;">
+<img src="assets/huntools2.png" style="margin:0;padding:0;display:inline-block;vertical-align:middle;">
 
 ---
 
