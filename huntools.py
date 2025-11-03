@@ -170,6 +170,8 @@ ALL_TOOLS = {
     "massdns": {"type": "go", "install": "rm -rf /tmp/massdns && git clone https://github.com/blechschmidt/massdns.git /tmp/massdns && cd /tmp/massdns && make && mv /tmp/massdns/bin/massdns $HOME/.huntools/go/"},
     "feroxbuster": {"type": "go", "install": "curl -sL https://raw.githubusercontent.com/epi052/feroxbuster/main/install-nix.sh | bash -s -- $HOME/.huntools/go"},
     "unfurl": {"type": "go", "install": "go -v install github.com/tomnomnom/unfurl@latest"},
+    "subzy": {"type": "go", "install": "go install -v github.com/PentestPad/subzy@latest"},
+    
 
     # Package Tools
     "jq": {"type": "package"}, # command-line JSON processor
