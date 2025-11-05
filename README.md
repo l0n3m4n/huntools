@@ -1,4 +1,6 @@
-<h1 align="center"><img src="assets/logo.gif" alt="Huntools Logo" width="25"/> Huntools</h1>
+<p align="center">
+  <img src="./assets/huntools_logo.png" alt="Logo" width="150" />
+</p>
 
 <br>
  
