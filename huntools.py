@@ -171,6 +171,7 @@ ALL_TOOLS = {
     "feroxbuster": {"type": "go", "install": "curl -sL https://raw.githubusercontent.com/epi052/feroxbuster/main/install-nix.sh | bash -s -- $HOME/.huntools/go"},
     "unfurl": {"type": "go", "install": "go -v install github.com/tomnomnom/unfurl@latest"},
     "subzy": {"type": "go", "install": "go install -v github.com/PentestPad/subzy@latest"},
+    "qsreplace": {"type": "go", "install": "go install -v github.com/tomnomnom/qsreplace@latest"}, 
     
 
     # Package Tools
