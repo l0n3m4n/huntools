@@ -170,7 +170,7 @@ list of all the tools that Huntools can manage.
 | nmapurls | shortscan | sns | ppmap |
 | sourcemapper | jsluice | urlfinder | cent |
 | csprecon | VhostFinder | misconfig-mapper | gitleaks |
-| trufflehog |  |  |  |
+| trufflehog | qsreplace |  |  |
 
 ### Python Tools
 
