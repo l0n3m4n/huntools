@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/huntools_logo.png" alt="Logo" width="150" />
+  <img src="./assets/logo.png" alt="Logo" width="150" />
 </p>
 
 <br>
