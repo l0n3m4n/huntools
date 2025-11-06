@@ -67,6 +67,9 @@ sudo python3 huntools.py install -a
 # Install a Single Tool
 sudo python3 huntools.py install -s <tool_name>
 
+# Install Multiple tools
+sudo python3 huntools.py install -m ffuf,feroxbuster,gobuster
+
 # System-wide Installation (e.g. /local/bin)
 sudo python3 huntools.py install -is
 ```
