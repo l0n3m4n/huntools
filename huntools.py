@@ -96,7 +96,7 @@ def show_banner():
  ░  ░░ ░ ░░░ ░ ░    ░   ░ ░   ░      ░ ░ ░ ▒  ░ ░ ░ ▒    ░ ░   ░  ░  ░  
  ░  ░  ░   ░              ░              ░ ░      ░ ░      ░  ░      ░  
                                                                         
-           Author: l0n3m4n | Version: 3.4.1 | {tool_count} Hunter Tools
+           Author: l0n3m4n | Version: 3.4.2 | {tool_count} Hunter Tools
 \n'''
     print(f"{Colors.CYAN}{banner}{Colors.NC}", end="")
 
@@ -887,6 +887,29 @@ def install_single(tool_name):
     elif tool_type == "git":
         print(f"{Colors.CYAN}Cloning git repository: {actual_tool_name}{Colors.NC}")
 
+def install_multiple(tools_str):
+    print(f"{Colors.CYAN}--- Installing multiple tools ---{Colors.NC}")
+    tool_names = [tool.strip() for tool in tools_str.split(',')]
+    success_count = 0
+    fail_count = 0
+
+    for tool_name in tool_names:
+        try:
+            install_single(tool_name)
+            success_count += 1
+        except Exception as e:
+            error_message = f"Error installing {tool_name}: {e}"
+            _log_error(error_message)
+            print(f"\n{Colors.RED}Error installing {tool_name}: {e}{Colors.NC}")
+            fail_count += 1
+
+    print(f"\n{Colors.CYAN}--- Multiple tools installation summary ---{Colors.NC}")
+    print(f"{Colors.GREEN}Successfully installed: {success_count}{Colors.NC}")
+    print(f"{Colors.RED}Failed to install: {fail_count}{Colors.NC}\n")
+
+    return fail_count == 0
+
+
 def reinstall_single(tool_name, force=False):
     print(f"{Colors.CYAN}--- Reinstalling {tool_name} ---{Colors.NC}")
 
@@ -1555,6 +1578,7 @@ def main():
         install_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
         install_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
         install_parser.add_argument("-s", dest="install_single", help="Install a single, specified tool from the available list.", metavar="TOOL")
+        install_parser.add_argument("-m", dest="install_multiple", help="Install multiple tools, separated by commas.", metavar="TOOL1,TOOL2,...")
         install_parser.add_argument("--single", dest="install_single", help=argparse.SUPPRESS, metavar="TOOL")
         install_parser.add_argument("-a", dest="install_all", action="store_true", help="Install all available tools.")
         install_parser.add_argument("--all", dest="install_all", action="store_true", help=argparse.SUPPRESS)
@@ -1648,6 +1672,8 @@ def main():
                 install_all()
             elif args.install_single:
                 install_single(args.install_single)
+            elif args.install_multiple:
+                install_multiple(args.install_multiple)
             elif args.install_system:
                 install_system()
             else:
