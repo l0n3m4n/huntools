@@ -204,6 +204,7 @@ ALL_TOOLS = {
     "dnsvalidator": {"type": "python_git", "url": "https://github.com/vortexau/dnsvalidator.git"},
     "ghauri": {"type": "python_git", "url": "https://github.com/r0oth3x49/ghauri.git"},
     "seclists": {"type": "python_git", "url": "https://github.com/danielmiessler/SecLists.git", "size": "large"}, # NOTE: manual intallation due to package size (2.6gb)
+    "xsser" : {"type": "python_git", "url": "https://github.com/epsylon/xsser.git"}, 
     
     # Python Pip Tools
     "censys": {"type": "python_git", "url": "https://github.com/censys/censys-python.git"},
