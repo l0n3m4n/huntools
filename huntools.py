@@ -124,9 +124,7 @@ ALL_TOOLS = {
     "metabigor": {"type": "go", "install": "go install -v github.com/j3ssie/metabigor@latest"},
     "gf": {"type": "go", "install": "go install -v github.com/tomnomnom/gf@latest"},
     "brutespray": {"type": "go", "install": "go install -v github.com/x90skysn3k/brutespray@latest"},
-    "qsreplace": {"type": "go", "install": "go install -v github.com/tomnomnom/qsreplace@latest"},
     "github-subdomains": {"type": "go", "install": "go install -v github.com/gwen001/github-subdomains@latest"},
-    "gitlab-subdomains": {"type": "go", "install": "go install -v github.com/gwen001/gitlab-subdomains@latest"},
     "anew": {"type": "go", "install": "go install -v github.com/tomnomnom/anew@latest"},
     "notify": {"type": "go", "install": "go install -v github.com/projectdiscovery/notify/cmd/notify@latest"},
     "unfurl": {"type": "go", "install": "go install -v github.com/tomnomnom/unfurl@v0.3.0"},
@@ -172,7 +170,7 @@ ALL_TOOLS = {
     "unfurl": {"type": "go", "install": "go -v install github.com/tomnomnom/unfurl@latest"},
     "subzy": {"type": "go", "install": "go install -v github.com/PentestPad/subzy@latest"},
     "qsreplace": {"type": "go", "install": "go install -v github.com/tomnomnom/qsreplace@latest"}, 
-    
+    "vulnx": {"type": "go", "install": "go install -v github.com/projectdiscovery/cvemap/cmd/vulnx@latest"},
 
     # Package Tools
     "jq": {"type": "package"}, # command-line JSON processor
