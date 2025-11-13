@@ -218,6 +218,7 @@ ALL_TOOLS = {
  
     # pip install 
     "waymore": {"type": "pip", "install": "waymore"}, 
+    "dirsearch": {"type": "pip", "intall": "dirsearch"}, 
 
     # Git Repos
     "crt-sh": {"type": "git", "url": "https://github.com/az7rb/crt.sh.git"},
