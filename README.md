@@ -25,10 +25,7 @@
 
 
 
-Huntools is a Python based command line utility crafted for penetration testers and bug bounty hunters. It    
-provides a robust and streamlined solution for managing your entire arsenal of reconnaissance, vulnerability analysis, exploitation tools etc. With this tool you gain    
-unparalleled control over tool installation, ensuring your toolkit is always optimized, consistent, portable, and ready  
-for critical operations.
+Huntools is a Python-based command-line utility designed for penetration testers and bug bounty hunters. It simplifies the installation and management of a wide range of tools used for reconnaissance, vulnerability analysis, and exploitation. With Huntools, you can ensure your toolkit stays consistent, optimized, and portable, giving you full control and making it easier to stay prepared for any critical operation.
 
 
 ## 🚀 Features
@@ -37,7 +34,6 @@ for critical operations.
 - 🛡️ **Checksum Verification:** Ensures integrity of downloaded Go tools to prevent corruption.
 - 🩹 **Installation Handling:** Detects and repairs partially cloned Git repositories.
 - 🔄 **Reinstall Command:** Easily fix corrupted tools by performing a fresh reinstallation.
-- 📊 **Tool Count:** The banner now dynamically displays the total number of available tools.
 - 🛠️ **Tool Management:** All tools are managed from a single, extensible data structure, making the script maintainable.
 - 🔍 **Smart Checks:** Skips installation if a tool is already present in your system's PATH.
 - 🌐 **Cross-Platform:** Designed to work across various operating systems, Linux distrus Debian, Ubuntu, Fedora, and Arch
@@ -199,7 +195,7 @@ list of all the tools that Huntools can manage.
 |  |  |  |  |
 |---|---|---|---|
 | seclists | jq | flameshot | lsd |
-| cewl | nmap | massdns |  |
+| cewl | nmap | massdns | dirsearch |
 
 ---
 
