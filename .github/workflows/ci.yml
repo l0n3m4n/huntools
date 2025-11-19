@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+    - name: Create virtual environment
+      run: python3 -m venv .venv
+    - name: Install dependencies
+      run: |
+        . .venv/bin/activate
+        pip install pytest pyyaml
+    - name: Run tests
+      run: |
+        . .venv/bin/activate
+        pytest tests/

@@ -11,6 +11,9 @@ import yaml
 import hashlib
 import textwrap
 import urllib.request
+import json
+import concurrent.futures
+from datetime import datetime
 
 
 
@@ -79,8 +82,9 @@ class Colors:
 
 def _log_error(message):
     clean_message = re.sub(r'\x1b\[([0-9]{1,2};)?([0-9]{1,2})?m', '', message)
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open("errors.log", "a") as f:
-        f.write(clean_message + "\n")
+        f.write(f"[{timestamp}] {clean_message}\n")
 
 
 def show_banner():
@@ -253,6 +257,14 @@ def _get_actual_config_file_path():
                 pass  # Handle invalid YAML
     return default_config_file
 
+def validate_config(config):
+    """Validates the paths in the configuration."""
+    if "PATHS" in config:
+        for key, path in config["PATHS"].items():
+            if key.endswith("_dir") and not os.path.isdir(path):
+                print(f"{Colors.RED}Error: The directory '{path}' for '{key}' does not exist.{Colors.NC}")
+                sys.exit(1)
+
 def load_config():
     os.makedirs(CONFIG_DIR, exist_ok=True)
     actual_config_file = _get_actual_config_file_path()
@@ -274,6 +286,8 @@ def load_config():
             "config_file": actual_config_file # Store the current config file path
         }
         save_config() # Ensure default config is written if not exists
+    
+    validate_config(config)
 
 def save_config():
     actual_config_file = config.get("PATHS", {}).get("config_file", os.path.join(CONFIG_DIR, "config.yml"))
@@ -512,39 +526,61 @@ def install_go():
             print(f"{Colors.RED}Stderr: {e.stderr.decode()}{Colors.NC}")
         return False
 
+def _install_tool_worker(tool, tool_info, install_function):
+    """Worker function to install a single tool."""
+    if tool_info.get("size") == "large":
+        response = input(f"{Colors.YELLOW}The tool '{tool}' is large. Do you want to install it? (y/n): {Colors.NC}").lower()
+        if response != 'y':
+            print(f"{Colors.YELLOW}Skipping installation of {tool}.{Colors.NC}")
+            return tool, "skipped"
+
+    existing_path = shutil.which(tool.lower())
+    if existing_path:
+        print(f"{Colors.GREEN}{tool} is already installed at {Colors.MAGENTA}{existing_path}{Colors.GREEN}.{Colors.NC}")
+        return tool, "success"
+
+    print(f"{Colors.CYAN}Installing {tool}...{Colors.NC}")
+    try:
+        install_function(tool)
+        print(f"{Colors.GREEN}{tool} installed successfully.{Colors.NC}")
+        return tool, "success"
+    except subprocess.CalledProcessError as e:
+        error_message = f"Error installing {tool}: {e}\nStderr: {e.stderr.decode()}\nSuggestion: Please check the tool's repository for known issues or try manual installation. Command: {e.cmd}"
+        _log_error(error_message)
+        print(f"\n{Colors.RED}Error installing {tool}: {e}{Colors.NC}")
+        print(f"{Colors.YELLOW}Suggestion: Please check the tool's repository for known issues or try manual installation. Command: {e.cmd}{Colors.NC}\n")
+        return tool, "failed"
+    except Exception as e:
+        error_message = f"An unexpected error occurred while installing {tool}: {e}"
+        _log_error(error_message)
+        print(f"\n{Colors.RED}An unexpected error occurred while installing {tool}: {e}{Colors.NC}")
+        return tool, "failed"
+
 def _install_tools(title, tools, install_function):
     print(f"{Colors.CYAN}--- {title} ---{Colors.NC}")
     success_count = 0
     fail_count = 0
+    skipped_count = 0
 
-    for tool in tools:
-        tool_info = ALL_TOOLS.get(tool, {})
-        if tool_info.get("size") == "large":
-            response = input(f"{Colors.YELLOW}The tool '{tool}' is large. Do you want to install it? (y/n): {Colors.NC}").lower()
-            if response != 'y':
-                print(f"{Colors.YELLOW}Skipping installation of {tool}.{Colors.NC}")
-                continue
-
-        existing_path = shutil.which(tool.lower())
-        if existing_path:
-            print(f"{Colors.GREEN}{tool} is already installed at {Colors.MAGENTA}{existing_path}{Colors.GREEN}.{Colors.NC}")
-            success_count += 1
-            continue
-
-        print(f"{Colors.CYAN}Installing {tool}...{Colors.NC}")
-        try:
-            install_function(tool)
-            print(f"{Colors.GREEN}{tool} installed successfully.{Colors.NC}")
-            success_count += 1
-        except subprocess.CalledProcessError as e:
-            error_message = f"Error installing {tool}: {e}\nStderr: {e.stderr.decode()}\nSuggestion: Please check the tool's repository for known issues or try manual installation. Command: {e.cmd}"
-            _log_error(error_message)
-            print(f"\n{Colors.RED}Error installing {tool}: {e}{Colors.NC}")
-            print(f"{Colors.YELLOW}Suggestion: Please check the tool's repository for known issues or try manual installation. Command: {e.cmd}{Colors.NC}\n")
-            fail_count += 1
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future_to_tool = {executor.submit(_install_tool_worker, tool, ALL_TOOLS.get(tool, {}), install_function): tool for tool in tools}
+        for future in concurrent.futures.as_completed(future_to_tool):
+            tool = future_to_tool[future]
+            try:
+                _, status = future.result()
+                if status == "success":
+                    success_count += 1
+                elif status == "skipped":
+                    skipped_count += 1
+                else:
+                    fail_count += 1
+            except Exception as exc:
+                print(f'{Colors.RED}{tool} generated an exception: {exc}{Colors.NC}')
+                fail_count += 1
 
     print(f"\n{Colors.CYAN}--- {title} summary ---{Colors.NC}")
     print(f"{Colors.GREEN}Successfully installed/skipped: {success_count}{Colors.NC}")
+    print(f"{Colors.YELLOW}Skipped: {skipped_count}{Colors.NC}")
     print(f"{Colors.RED}Failed to install: {fail_count}{Colors.NC}\n")
 
     return fail_count == 0
@@ -829,85 +865,58 @@ def install_all():
         # Remove ANSI escape codes for the log file
         clean_summary = [re.sub(r'\x1b\[([0-9]{1,2};)?([0-9]{1,2})?m', '', line) for line in summary_log]
         f.write("\n".join(clean_summary))
+    
+    # Also log the summary to errors.log for comprehensive error reporting
+    _log_error("\n".join(clean_summary))
 
     print(f"{Colors.GREEN}Installation summary written to logs.txt{Colors.NC}")
 
 def install_single(tool_name):
-    print(f"{Colors.CYAN}Attempting to install single tool: {tool_name}{Colors.NC}")
-
-    tool_name_lower = tool_name.lower()
-    if tool_name_lower not in ALL_TOOLS_LOWER_MAP:
-        print(f"\n{Colors.RED}Error: Tool '{tool_name}' not found.{Colors.NC}")
-        print(f"{Colors.YELLOW}run 'huntools display -a' to see the list of available tools.{Colors.NC}\n")
-        return
-
-    actual_tool_name = ALL_TOOLS_LOWER_MAP[tool_name_lower]
-    tool = ALL_TOOLS[actual_tool_name]
-
-    existing_path = shutil.which(actual_tool_name)
-    if existing_path:
-        print(f"{Colors.GREEN}{actual_tool_name} is already installed at {Colors.MAGENTA}{existing_path}{Colors.GREEN}. Skipping installation.{Colors.NC}")
-        return
-
-    tool_type = tool["type"]
-
-    if tool_type == "go":
-        print(f"{Colors.CYAN}Installing Go tool: {actual_tool_name}{Colors.NC}")
-        subprocess.run(tool["install"], shell=True)
-    
-    elif tool_type == "package":
-        print(f"{Colors.CYAN}Installing package: {actual_tool_name}{Colors.NC}")
-        package_manager = get_package_manager()
-        if not package_manager:
-            print(f"{Colors.RED}Unsupported OS for package installation.{Colors.NC}")
-            return
-        if package_manager == "apt-get":
-            subprocess.run(f"sudo {package_manager} install -y {actual_tool_name}", shell=True)
-        elif package_manager == "yum":
-            subprocess.run(f"sudo {package_manager} install -y {actual_tool_name}", shell=True)
-        elif package_manager == "pacman":
-            subprocess.run(f"sudo {package_manager} -S --noconfirm {actual_tool_name}", shell=True)
-        elif package_manager == "brew":
-            subprocess.run(f"{package_manager} install {actual_tool_name}", shell=True)
-
-    elif tool_type == "python_git":
-        print(f"{Colors.CYAN}Installing Python tool from git: {actual_tool_name}{Colors.NC}")
-        install_dir = os.path.join(os.environ["HOME"], ".huntools", "python")
-        os.makedirs(install_dir, exist_ok=True)
-        repo_url = tool["url"]
-        repo_path = os.path.join(install_dir, actual_tool_name)
-        subprocess.run(["git", "clone", repo_url, repo_path])
-        
-
-
-    elif tool_type == "pip":
-        print(f"{Colors.CYAN}Installing Python tool from pip: {actual_tool_name}{Colors.NC}")
-        subprocess.run([sys.executable, "-m", "pip", "install", actual_tool_name])
-
-    elif tool_type == "git":
-        print(f"{Colors.CYAN}Cloning git repository: {actual_tool_name}{Colors.NC}")
+    install_multiple(tool_name)
 
 def install_multiple(tools_str):
     print(f"{Colors.CYAN}--- Installing multiple tools ---{Colors.NC}")
     tool_names = [tool.strip() for tool in tools_str.split(',')]
-    success_count = 0
-    fail_count = 0
 
-    for tool_name in tool_names:
-        try:
-            install_single(tool_name)
-            success_count += 1
-        except Exception as e:
-            error_message = f"Error installing {tool_name}: {e}"
-            _log_error(error_message)
-            print(f"\n{Colors.RED}Error installing {tool_name}: {e}{Colors.NC}")
-            fail_count += 1
+    def _install_worker(tool_name):
+        tool_name_lower = tool_name.lower()
+        if tool_name_lower not in ALL_TOOLS_LOWER_MAP:
+            print(f"\n{Colors.RED}Error: Tool '{tool_name}' not found.{Colors.NC}")
+            return
 
-    print(f"\n{Colors.CYAN}--- Multiple tools installation summary ---{Colors.NC}")
-    print(f"{Colors.GREEN}Successfully installed: {success_count}{Colors.NC}")
-    print(f"{Colors.RED}Failed to install: {fail_count}{Colors.NC}\n")
+        actual_tool_name = ALL_TOOLS_LOWER_MAP[tool_name_lower]
+        tool = ALL_TOOLS[actual_tool_name]
+        tool_type = tool["type"]
 
-    return fail_count == 0
+        if tool_type == "go":
+            subprocess.run(tool["install"], shell=True, check=True, capture_output=True)
+        elif tool_type == "package":
+            package_manager = get_package_manager()
+            if not package_manager:
+                raise Exception(f"Unsupported OS for package installation of {actual_tool_name}")
+            if package_manager == "apt-get":
+                subprocess.run(f"sudo {package_manager} install -y {actual_tool_name}", shell=True, check=True, capture_output=True)
+            elif package_manager == "yum":
+                subprocess.run(f"sudo {package_manager} install -y {actual_tool_name}", shell=True, check=True, capture_output=True)
+            elif package_manager == "pacman":
+                subprocess.run(f"sudo {package_manager} -S --noconfirm {actual_tool_name}", shell=True, check=True, capture_output=True)
+            elif package_manager == "brew":
+                subprocess.run(f"{package_manager} install {actual_tool_name}", shell=True, check=True, capture_output=True)
+        elif tool_type == "python_git":
+            install_dir = os.path.join(os.environ["HOME"], ".huntools", "python")
+            os.makedirs(install_dir, exist_ok=True)
+            repo_url = tool["url"]
+            repo_path = os.path.join(install_dir, actual_tool_name)
+            subprocess.run(["git", "clone", repo_url, repo_path], check=True, capture_output=True)
+        elif tool_type == "pip":
+            subprocess.run([sys.executable, "-m", "pip", "install", tool["install"]], check=True, capture_output=True)
+        elif tool_type == "git":
+            install_dir = config["PATHS"].get("git_dir", DEFAULT_GIT_INSTALL_DIR)
+            repo_url = tool["url"]
+            repo_path = os.path.join(install_dir, actual_tool_name)
+            subprocess.run(["git", "clone", repo_url, repo_path], check=True, capture_output=True)
+
+    _install_tools("Installing tools", tool_names, _install_worker)
 
 
 def reinstall_single(tool_name, force=False):
@@ -924,7 +933,11 @@ def reinstall_single(tool_name, force=False):
     install_single(actual_tool_name)
     print(f"\n{Colors.GREEN}--- Reinstallation of {actual_tool_name} complete! ---{Colors.NC}")
 
-def display_all():
+def display_all(output_format="text"):
+    if output_format == "json":
+        print(json.dumps(ALL_TOOLS, indent=4))
+        return
+
     print(f"{Colors.CYAN}Available tools:{Colors.NC}")
     all_tools = sorted(ALL_TOOLS.keys(), key=str.lower)
     if not all_tools:
@@ -1627,6 +1640,7 @@ def main():
         display_parser = subparsers.add_parser("display", help="Display all tools", add_help=False, formatter_class=CustomHelpFormatter)
         display_parser.add_argument("-a", dest="display_all", action="store_true", help="Show all tools available for installation.")
         display_parser.add_argument("--all", dest="display_all", action="store_true", help=argparse.SUPPRESS)
+        display_parser.add_argument("-f", "--format", dest="output_format", choices=["text", "json"], default="text", help="Specify the output format (text or json).")
         display_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
         display_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
         
@@ -1683,7 +1697,7 @@ def main():
             reinstall_single(args.tool_name, args.force_remove)
         elif args.command == "display":
             if args.display_all:
-                display_all()
+                display_all(args.output_format)
             else:
                 display_parser.print_help()
                 sys.exit(1)
