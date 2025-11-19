@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [3.5.0] - 2025-11-19
+
+### Added
+- **Configuration Validation:** Implemented validation for `config.yml` to ensure correct paths and values, improving script robustness.
+- **Parallel Installation:** Enhanced `install_multiple` and `install_all` functions to use `ThreadPoolExecutor` for concurrent tool installations, significantly speeding up the process.
+- **Improved Error Reporting:** Added timestamps to error logs and included a comprehensive installation summary in `errors.log` for better debugging.
+- **JSON Output Format:** Extended the `display` command with a `--format json` option to output the list of available tools in JSON format.
+- **Automated Testing:** Introduced a `pytest` test suite with initial tests for configuration validation.
+- **CI/CD Integration:** Added a GitHub Actions workflow (`.github/workflows/ci.yml`) to automatically run tests on push and pull requests.
+
+### Changed
+- Updated version to 3.5.0.
+
+
 ## [3.4.2] - 2025-11-06
 
 ### Added

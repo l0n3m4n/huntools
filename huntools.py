@@ -100,7 +100,7 @@ def show_banner():
  ░  ░░ ░ ░░░ ░ ░    ░   ░ ░   ░      ░ ░ ░ ▒  ░ ░ ░ ▒    ░ ░   ░  ░  ░  
  ░  ░  ░   ░              ░              ░ ░      ░ ░      ░  ░      ░  
                                                                         
-           Author: l0n3m4n | Version: 3.4.2 | {tool_count} Hunter Tools
+           Author: l0n3m4n | Version: 3.5.0 | {tool_count} Hunter Tools
 \n'''
     print(f"{Colors.CYAN}{banner}{Colors.NC}", end="")
 
