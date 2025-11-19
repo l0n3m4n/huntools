@@ -1649,7 +1649,7 @@ def main():
         display_parser = subparsers.add_parser("display", help="Display all tools", add_help=False, formatter_class=CustomHelpFormatter)
         display_parser.add_argument("-a", dest="display_all", action="store_true", help="Show all tools available for installation.")
         display_parser.add_argument("--all", dest="display_all", action="store_true", help=argparse.SUPPRESS)
-        display_parser.add_argument("-f", "--format", dest="output_format", choices=["text", "json"], default="text", help="Specify the output format.")
+        display_parser.add_argument("-f", "--format", dest="output_format", choices=["text", "json"], default="text", help="Specify the output format (text or json).")
         display_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
         display_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
         
