@@ -287,6 +287,13 @@ def load_config():
         }
         save_config() # Ensure default config is written if not exists
     
+    # Ensure default installation directories exist
+    os.makedirs(config["PATHS"]["install_dir"], exist_ok=True)
+    os.makedirs(config["PATHS"]["python_dir"], exist_ok=True)
+    os.makedirs(config["PATHS"]["git_dir"], exist_ok=True)
+    os.makedirs(DEFAULT_GO_WORKSPACE_DIR, exist_ok=True) # Ensure Go workspace exists
+    os.makedirs(config["PATHS"]["go_bin_dir"], exist_ok=True) # Ensure Go bin directory exists
+    
     validate_config(config)
 
 def save_config():
