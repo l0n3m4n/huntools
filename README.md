@@ -197,24 +197,8 @@ list of all the tools that Huntools can manage.
 | seclists | jq | flameshot | lsd |
 | cewl | nmap | massdns | dirsearch |
 
----
 
-## TODO
-
--   [ ] **Configuration Validation:** Implement validation for `config.yml` to ensure correct paths and values.
--   [ ] **Parallel Installation:** Speed up tool installations by implementing concurrency in `install_multiple` and `install_all`.
--   [ ] **Improved Error Reporting:** Provide more detailed and user-friendly error messages, especially for failed tool installations.
--   [ ] **Plugin System:** Allow users to define and add their own tools via a plugin system, enhancing extensibility.
--   [ ] **Shell Completion:** Add support for `bash`, `zsh`, and `fish` shell completion for improved UX.
--   [ ] **More Output Formats:** Extend `display` command to support output in formats like JSON or YAML.
--   [ ] **Automated Testing:** Implement a test suite to ensure code quality and stability.
--   [ ] **CI/CD Integration:** Integrate with CI/CD platforms (e.g., GitHub Actions) for automated testing and releases.
-
----
-
-
-## 🔐 GitHub Token (Optional)
-
+ ## 🔐 GitHub Token (Optional)
 Set a GitHub token to avoid API rate limits during repo searches:
 ```bash
 export GITHUB_TOKEN=ghp_yourtokenhere
