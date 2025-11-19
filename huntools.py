@@ -1543,14 +1543,7 @@ class CustomHelpFormatter(argparse.HelpFormatter):
                     parts.append(f"    {Colors.YELLOW}{subparser_action.dest:<{max_len}}{Colors.NC}    {Colors.GREEN}{subparser_action.help}{Colors.NC}") # Add more indentation
             return "\n".join(parts)
         else:
-            action_header = self._format_action_invocation(action)
-            
-            help_text = self._expand_help(action)
-            
-            if help_text:
-                return f"  {action_header} {help_text}\n"
-            else:
-                return f"  {action_header}\n"
+            return super()._format_action(action)
 
     def _format_action_invocation(self, action):
         if not action.option_strings:
@@ -1566,6 +1559,13 @@ class CustomHelpFormatter(argparse.HelpFormatter):
                 for option_string in action.option_strings:
                     parts.append(f'{Colors.YELLOW}{option_string}{Colors.NC} {Colors.CYAN}{args_string}{Colors.NC}')
             return ', '.join(parts)
+
+    def _get_help_string(self, action):
+        help_string = super()._get_help_string(action)
+        # Remove the (choices: ...) part from the help string
+        if action.choices:
+            help_string = re.sub(r'\(choices: .*?\)', '', help_string)
+        return help_string
 
     def _format_text(self, text):
         if text:
