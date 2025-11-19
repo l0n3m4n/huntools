@@ -1543,14 +1543,16 @@ class CustomHelpFormatter(argparse.HelpFormatter):
                     parts.append(f"    {Colors.YELLOW}{subparser_action.dest:<{max_len}}{Colors.NC}    {Colors.GREEN}{subparser_action.help}{Colors.NC}") # Add more indentation
             return "\n".join(parts)
         else:
-            action_header = self._format_action_invocation(action)
-            
-            help_text = self._expand_help(action)
-            
-            if help_text:
-                return f"  {action_header} {help_text}\n"
+            # Original _format_action logic
+            parts = []
+            # if the action has information for the help text, start a new line
+            if action.help:
+                parts.append("%s%s" % (self._current_indent_by_action(action),
+                                       self._format_action_invocation(action)))
+                parts.append("  %s" % self._expand_help(action))
             else:
-                return f"  {action_header}\n"
+                parts.append(self._format_action_invocation(action))
+            return '\n'.join(parts)
 
     def _format_action_invocation(self, action):
         if not action.option_strings:
@@ -1567,12 +1569,34 @@ class CustomHelpFormatter(argparse.HelpFormatter):
                     parts.append(f'{Colors.YELLOW}{option_string}{Colors.NC} {Colors.CYAN}{args_string}{Colors.NC}')
             return ', '.join(parts)
 
+    def _format_args(self, action, default_metavar):
+        # Override _format_args to prevent choices from being added to the help string
+        get_metavar = self._metavar_formatter(action, default_metavar)
+        if action.nargs is None:
+            return '%s' % get_metavar(1)
+        elif action.nargs == argparse.OPTIONAL:
+            return '[%s]' % get_metavar(1)
+        elif action.nargs == argparse.ZERO_OR_MORE:
+            return '[%s ...]' % get_metavar(1)
+        elif action.nargs == argparse.ONE_OR_MORE:
+            return '%s ...' % get_metavar(1)
+        elif action.nargs == argparse.REMAINDER:
+            return '...'
+        elif action.nargs == argparse.PARSER:
+            return '%s ...' % get_metavar(1)
+        else:
+            return '%s' % get_metavar(action.nargs)
+
     def _format_text(self, text):
         if text:
             return f'{Colors.WHITE}{super()._format_text(text)}{Colors.NC}'
         return ''
 
     def _expand_help(self, action):
+        # This is where the choices are normally added. We'll override it.
+        # If choices are present, we'll just return the help message without them.
+        if action.choices:
+            return action.help
         return f'{Colors.GREEN}{super()._expand_help(action)}{Colors.NC}'
 
     def _format_action_group_name(self, action_group):
@@ -1649,7 +1673,7 @@ def main():
         display_parser = subparsers.add_parser("display", help="Display all tools", add_help=False, formatter_class=CustomHelpFormatter)
         display_parser.add_argument("-a", dest="display_all", action="store_true", help="Show all tools available for installation.")
         display_parser.add_argument("--all", dest="display_all", action="store_true", help=argparse.SUPPRESS)
-        display_parser.add_argument("-f", "--format", dest="output_format", choices=["text", "json"], default="text", help="Specify the output format (text or json).")
+        display_parser.add_argument("-f", "--format", dest="output_format", choices=["text", "json"], default="text", help="Specify the output format (text or json).", metavar="FORMAT")
         display_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
         display_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
         
