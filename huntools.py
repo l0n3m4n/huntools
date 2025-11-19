@@ -1279,6 +1279,8 @@ def remove_single(tool_name, force=False):
     except OSError as e:
         print(f"{Colors.RED}Error removing {tool_name}: {e}{Colors.NC}")
         print(f"{Colors.YELLOW}If this is a permission error, try running with 'sudo'.{Colors.NC}")
+
+        
 def get_installed_tools_count():
     installed_count = 0
     for tool_name, tool_info in ALL_TOOLS.items():
