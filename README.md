@@ -202,12 +202,10 @@ list of all the tools that Huntools can manage.
 ## TODO
 
 -   [ ] **Configuration Validation:** Implement validation for `config.yml` to ensure correct paths and values.
--   [ ] **Tool Categories:** Organize `ALL_TOOLS` into categories (e.g., "recon", "exploitation") for easier management and targeted installation.
 -   [ ] **Parallel Installation:** Speed up tool installations by implementing concurrency in `install_multiple` and `install_all`.
 -   [ ] **Improved Error Reporting:** Provide more detailed and user-friendly error messages, especially for failed tool installations.
 -   [ ] **Plugin System:** Allow users to define and add their own tools via a plugin system, enhancing extensibility.
 -   [ ] **Shell Completion:** Add support for `bash`, `zsh`, and `fish` shell completion for improved UX.
--   [ ] **Man Page Generation:** Automatically generate a `man` page for `huntools` for comprehensive documentation.
 -   [ ] **More Output Formats:** Extend `display` command to support output in formats like JSON or YAML.
 -   [ ] **Automated Testing:** Implement a test suite to ensure code quality and stability.
 -   [ ] **CI/CD Integration:** Integrate with CI/CD platforms (e.g., GitHub Actions) for automated testing and releases.
