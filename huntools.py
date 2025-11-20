@@ -1018,7 +1018,7 @@ def install_multiple(tools_str):
             logging.error(f"{Colors.BOLD_RED}Go installation failed. Aborting Go tool installation.{Colors.NC}")
             # Filter out Go tools from the list if Go installation failed
             tool_names = [name for name in tool_names if ALL_TOOLS.get(ALL_TOOLS_LOWER_MAP.get(name.lower()), {}).get("type") != "go"]
-            if not tool_names: # If only Go tools were requested and Go installation failed
+            if not tool_names:  
                 return
         if not go_already_installed:
             logging.info(f"{Colors.BRIGHT_CYAN}--- Checking and Installing Go ---{Colors.NC}")
@@ -1067,7 +1067,6 @@ def install_multiple(tools_str):
             logging.error(f"{Colors.BOLD_RED}Error installing {actual_tool_name}: {e}{Colors.NC}")
             return False
 
-    # The _install_tools function already handles coloring for its output
     _install_tools("Installing tools", tool_names, _install_worker)
 
 
@@ -1834,7 +1833,7 @@ def main():
         display_parser.add_argument("-d", "--debug", action="store_true", help=argparse.SUPPRESS)
         display_parser.add_argument("-a", dest="display_all", action="store_true", help="Show all tools available for installation.")
         display_parser.add_argument("--all", dest="display_all", action="store_true", help=argparse.SUPPRESS)
-        display_parser.add_argument("-f", "--format", dest="output_format", default="text", help="Specify the output format (text or json).")
+        display_parser.add_argument("-f", dest="output_format", default="text", help="Specify the output format (text or json).")
         display_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
         display_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
         
@@ -1885,7 +1884,7 @@ def main():
             parser.print_help()
             sys.exit(1)
 
-        # Manual validation for --format option
+        # Manual validation for -f option
         if hasattr(args, 'output_format') and args.output_format not in ["text", "json"]:
             logging.error(f"Error: Invalid output format '{args.output_format}'. Choose from 'text' or 'json'.")
             sys.exit(1)

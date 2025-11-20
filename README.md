@@ -45,6 +45,7 @@ Huntools is a Python-based command-line utility designed for penetration testers
 <img src="assets/huntools1.png" style="margin:0;padding:0;display:inline-block;vertical-align:middle;">
 <img src="assets/huntools2.png" style="margin:0;padding:0;display:inline-block;vertical-align:middle;">
 
+![install](assets/install.png)
 ---
 
 ## 💡 Usage and Installation: 
