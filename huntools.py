@@ -341,6 +341,19 @@ def load_config():
     os.makedirs(DEFAULT_GO_WORKSPACE_DIR, exist_ok=True) # Ensure Go workspace exists
     os.makedirs(config["PATHS"]["go_bin_dir"], exist_ok=True) # Ensure Go bin directory exists
     
+    # Ensure Poetry and Go binaries are in the current process's PATH if they exist
+    poetry_bin_path = os.path.join(os.environ["HOME"], ".poetry", "bin")
+    if os.path.exists(poetry_bin_path) and poetry_bin_path not in os.environ["PATH"]:
+        os.environ["PATH"] = f"{poetry_bin_path}:{os.environ['PATH']}"
+        logging.debug(f"Added {poetry_bin_path} to PATH for current process.")
+
+    go_install_dir = os.path.join(os.environ["HOME"], ".huntools", "go")
+    goroot_path = os.path.join(go_install_dir, "go")
+    go_bin_path = os.path.join(goroot_path, "bin")
+    if os.path.exists(go_bin_path) and go_bin_path not in os.environ["PATH"]:
+        os.environ["PATH"] = f"{go_bin_path}:{os.environ['PATH']}"
+        logging.debug(f"Added {go_bin_path} to PATH for current process.")
+
     validate_config(config)
 
 def save_config():
@@ -392,6 +405,7 @@ def install_dependencies():
     if not shutil.which("gcc"): all_present = False
 
     if all_present:
+        logging.debug(f"All heuristic system dependencies found. Skipping full installation.")
         return True, True # Success, already installed
 
     package_manager = get_package_manager()
@@ -477,13 +491,10 @@ def _add_go_env_to_shell_config(shell_config_path, goroot, gopath):
 
 def install_poetry():
     if shutil.which("poetry"):
-        logging.info(f"Poetry is already installed.\n")
         return True, True # Success, already installed
     
-    logging.info(f"--- Installing Poetry ---")
     try:
         subprocess.run("curl -sSL https://install.python-poetry.org | python3 -", shell=True, check=True, capture_output=True)
-        logging.info(f"Poetry installed successfully.\n")
         # Add Poetry's bin directory to the current process's PATH
         poetry_bin_path = os.path.join(os.environ["HOME"], ".poetry", "bin")
         if os.path.exists(poetry_bin_path) and poetry_bin_path not in os.environ["PATH"]:
@@ -503,7 +514,6 @@ def install_go():
         logging.info(f"Go is already installed.\n")
         return True, True # Success, already installed
 
-    logging.info(f"Installing Go...")
     try:
         try:
             version_url = "https://go.dev/VERSION?m=text"
