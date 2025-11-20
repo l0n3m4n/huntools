@@ -84,11 +84,11 @@ class ColoredFormatter(logging.Formatter):
     FORMAT = "[%(levelname)s] %(message)s"
 
     LOG_COLORS = {
-        logging.DEBUG: Colors.BRIGHT_CYAN, # Dark gray for debug
-        logging.INFO: Colors.BRIGHT_GREEN,  # Bright green for info/success
-        logging.WARNING: Colors.BRIGHT_YELLOW, # Bright yellow for warnings
-        logging.ERROR: Colors.BOLD_RED,     # Bold red for errors
-        logging.CRITICAL: Colors.BOLD_RED + Colors.BOLD # Bold red and bold for critical
+        logging.DEBUG: Colors.BRIGHT_BLACK,
+        logging.INFO: Colors.WHITE,
+        logging.WARNING: Colors.YELLOW,
+        logging.ERROR: Colors.RED,
+        logging.CRITICAL: Colors.BOLD_RED
     }
 
     def format(self, record):
@@ -1140,28 +1140,28 @@ def checking_health():
         
         tool_path = shutil.which(tool_name) or shutil.which(tool_name.lower())
         if tool_path:
-            logging.info(f"  {Colors.BRIGHT_GREEN}✔ {tool_name}:{Colors.NC} Installed ({Colors.BRIGHT_YELLOW}{tool_path}{Colors.NC})")
+            logging.info(f"  - {tool_name}: Installed (at {tool_path})")
             is_installed = True
         
         elif tool_type == "python_git":
             repo_path = os.path.join(config["PATHS"].get("python_dir", DEFAULT_PYTHON_INSTALL_DIR), tool_name)
             if os.path.exists(repo_path):
-                logging.info(f"  {Colors.BRIGHT_GREEN}✔ {tool_name}:{Colors.NC} Installed {Colors.NC}{Colors.BRIGHT_GREEN}(Python Git Repo){Colors.NC} ({Colors.BRIGHT_YELLOW}{repo_path}{Colors.NC})")
+                logging.info(f"  - {tool_name}: Installed (Python Git Repo) (at {repo_path})")
                 is_installed = True
         
         elif tool_type == "git":
             repo_path = os.path.join(config["PATHS"].get("git_dir", DEFAULT_GIT_INSTALL_DIR), tool_name)
             if os.path.exists(repo_path):
-                logging.info(f"  {Colors.BRIGHT_GREEN}✔ {tool_name}:{Colors.NC} Installed {Colors.BRIGHT_GREEN}(Git Repo) {Colors.NC}({Colors.BRIGHT_YELLOW}{repo_path}{Colors.NC})")
+                logging.info(f"  - {tool_name}: Installed (Git Repo) (at {repo_path})")
                 is_installed = True
         elif tool_type == "go":
             go_bin_dir = config["PATHS"].get("go_bin_dir", DEFAULT_GO_BIN_DIR)
             huntools_go_bin_dir = os.path.join(os.environ["HOME"], ".huntools", "go")
             if os.path.exists(os.path.join(go_bin_dir, tool_name.lower())):
-                logging.info(f"  {Colors.BRIGHT_GREEN}✔ {tool_name}:{Colors.NC} Installed ({Colors.BRIGHT_YELLOW}{os.path.join(go_bin_dir, tool_name.lower())}{Colors.NC})")
+                logging.info(f"  - {tool_name}: Installed (at {os.path.join(go_bin_dir, tool_name.lower())})")
                 is_installed = True
             elif os.path.exists(os.path.join(huntools_go_bin_dir, tool_name.lower())):
-                logging.info(f"  {Colors.BRIGHT_GREEN}✔ {tool_name}:{Colors.NC} Installed ({Colors.BRIGHT_YELLOW}{os.path.join(huntools_go_bin_dir, tool_name.lower())}{Colors.NC})")
+                logging.info(f"  - {tool_name}: Installed (at {os.path.join(huntools_go_bin_dir, tool_name.lower())})")
                 is_installed = True
 
         if is_installed:
@@ -1595,20 +1595,20 @@ def show_changelog():
             elif line.startswith("### "):
                 print(f"{Colors.BRIGHT_BLUE}{line.replace('### ', '')}{Colors.NC}")
             elif line.startswith("- "):
-                formatted_line = line.replace("- ", f"{Colors.BRIGHT_GREEN}- {Colors.NC}")
-                formatted_line = re.sub(r'\*\*(.*?)\*\*', f'{Colors.YELLOW}\\1{Colors.NC}', formatted_line) # Bold
-                formatted_line = re.sub(r'_(.*?)_', f'{Colors.MAGENTA}\\1{Colors.NC}', formatted_line) # Italics with underscore
-                formatted_line = re.sub(r'\*(.*?)\*', f'{Colors.MAGENTA}\\1{Colors.NC}', formatted_line) # Italics with asterisk
-                formatted_line = re.sub(r'`(.*?)`', f'{Colors.BRIGHT_YELLOW}\\1{Colors.NC}', formatted_line) # Inline code
+                formatted_line = line.replace("- ", f"{Colors.GREEN}- {Colors.NC}")
+                formatted_line = re.sub(r'\*\*(.*?)\*\*', f'{Colors.YELLOW}\1{Colors.NC}', formatted_line) # Bold
+                formatted_line = re.sub(r'_(.*?)_', f'{Colors.ITALIC}\1{Colors.NC}', formatted_line) # Italics with underscore
+                formatted_line = re.sub(r'\*(.*?)\*', f'{Colors.ITALIC}\1{Colors.NC}', formatted_line) # Italics with asterisk
+                formatted_line = re.sub(r'`(.*?)`', f'{Colors.BLUE}\1{Colors.NC}', formatted_line) # Inline code
                 print(formatted_line)
             elif not line.strip():
                 print(line)
             else:
                 formatted_line = line
                 formatted_line = re.sub(r'\*\*(.*?)\*\*', f'{Colors.YELLOW}\1{Colors.NC}', formatted_line) # Bold
-                formatted_line = re.sub(r'_(.*?)_', f'{Colors.MAGENTA}\1{Colors.NC}', formatted_line) # Italics with underscore
-                formatted_line = re.sub(r'\*(.*?)\*', f'{Colors.MAGENTA}\1{Colors.NC}', formatted_line) # Italics with asterisk
-                formatted_line = re.sub(r'`(.*?)`', f'{Colors.BRIGHT_YELLOW}\1{Colors.NC}', formatted_line) # Inline code
+                formatted_line = re.sub(r'_(.*?)_', f'{Colors.ITALIC}\1{Colors.NC}', formatted_line) # Italics with underscore
+                formatted_line = re.sub(r'\*(.*?)\*', f'{Colors.ITALIC}\1{Colors.NC}', formatted_line) # Italics with asterisk
+                formatted_line = re.sub(r'`(.*?)`', f'{Colors.BLUE}\1{Colors.NC}', formatted_line) # Inline code
                 print(f"{Colors.NC}{formatted_line}{Colors.NC}")
 
     except Exception as e:
@@ -1675,7 +1675,7 @@ CMD ["bash"]
         except IOError as e:
             logging.error(f"Error writing Dockerfile to {filename}: {e}")
     else:
-        print(f"{Colors.BRIGHT_YELLOW}{dockerfile_content}{Colors.NC}")
+        print(f"{Colors.BLUE}{dockerfile_content}{Colors.NC}")
 
 
 class CustomHelpFormatter(argparse.HelpFormatter):
