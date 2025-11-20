@@ -84,11 +84,11 @@ class ColoredFormatter(logging.Formatter):
     FORMAT = "[%(levelname)s] %(message)s"
 
     LOG_COLORS = {
-        logging.DEBUG: Colors.BRIGHT_BLACK,
-        logging.INFO: Colors.WHITE,
-        logging.WARNING: Colors.YELLOW,
-        logging.ERROR: Colors.RED,
-        logging.CRITICAL: Colors.BOLD_RED
+        logging.DEBUG: Colors.BRIGHT_CYAN, # Dark gray for debug
+        logging.INFO: Colors.BRIGHT_GREEN,  # Bright green for info/success
+        logging.WARNING: Colors.BRIGHT_YELLOW, # Bright yellow for warnings
+        logging.ERROR: Colors.BOLD_RED,     # Bold red for errors
+        logging.CRITICAL: Colors.BOLD_RED + Colors.BOLD # Bold red and bold for critical
     }
 
     def format(self, record):
@@ -147,9 +147,9 @@ def show_banner():
  ░  ░░ ░ ░░░ ░ ░    ░   ░ ░   ░      ░ ░ ░ ▒  ░ ░ ░ ▒    ░ ░   ░  ░  ░  
  ░  ░  ░   ░              ░              ░ ░      ░ ░      ░  ░      ░  
                                                                         
-           Author: l0n3m4n | Version: 3.5.0 | {tool_count} Hunter Tools
-\n'''
-    print(f"{Colors.CYAN}{banner}{Colors.NC}", end="")
+'''
+    info_line = f"           {Colors.BRIGHT_MAGENTA}Author: l0n3m4n | Version: 3.5.0 | {tool_count} Hunter Tools{Colors.NC}\n\n"
+    print(f"{Colors.BRIGHT_CYAN}{banner}{Colors.NC}{info_line}", end="")
 
 
 
@@ -626,7 +626,7 @@ def install_go():
 def _install_tool_worker(tool, tool_info, install_function):
     """Worker function to install a single tool."""
     if tool_info.get("size") == "large":
-        response = input(f"{Colors.YELLOW}The tool '{tool}' is large. Do you want to install it? (y/n): {Colors.NC}").lower()
+        response = input(f"{Colors.BRIGHT_BLUE}The tool '{tool}' is large. Do you want to install it? (y/n): {Colors.NC}").lower()
         if response != 'y':
             logging.warning(f"Skipping installation of {tool}.")
             return tool, "skipped"
@@ -636,7 +636,7 @@ def _install_tool_worker(tool, tool_info, install_function):
         logging.info(f"{tool} is already installed at {existing_path}.")
         return tool, "success"
 
-    logging.info(f"Installing {tool}...")
+    logging.info(f"{Colors.BRIGHT_CYAN}Installing {tool}...{Colors.NC}")
     try:
         install_function(tool)
         logging.info(f"{tool} installed successfully.")
@@ -654,7 +654,7 @@ def _install_tool_worker(tool, tool_info, install_function):
         return tool, "failed"
 
 def _install_tools(title, tools, install_function):
-    logging.info(f"--- {title} ---")
+    logging.info(f"{Colors.BOLD_MAGENTA}--- {title} ---{Colors.NC}")
     success_count = 0
     fail_count = 0
     skipped_count = 0
@@ -675,8 +675,8 @@ def _install_tools(title, tools, install_function):
                 logging.error(f'{tool} generated an exception: {exc}')
                 fail_count += 1
 
-    logging.info(f"--- {title} summary ---")
-    logging.info(f"Successfully installed/skipped: {success_count}")
+    logging.info(f"{Colors.BOLD_MAGENTA}--- {title} summary ---{Colors.NC}")
+    logging.info(f"{Colors.BRIGHT_GREEN}Successfully installed/skipped: {success_count}{Colors.NC}")
     logging.warning(f"Skipped: {skipped_count}")
     logging.error(f"Failed to install: {fail_count}\n")
 
@@ -933,38 +933,43 @@ def install_all():
 
     # Summary Log
     summary_log = []
-    summary_log.append(f"\n--- Installation Summary ---")
+    summary_log.append(f"\n{Colors.BOLD_MAGENTA}--- Installation Summary ---{Colors.NC}")
     if dependencies_status:
-        summary_log.append(f"System Dependencies: SUCCESS")
+        summary_log.append(f"System Dependencies: {Colors.BRIGHT_GREEN}SUCCESS{Colors.NC}")
     else:
-        summary_log.append(f"System Dependencies: FAILED (Manual intervention may be required)")
+        summary_log.append(f"System Dependencies: {Colors.BOLD_RED}FAILED (Manual intervention may be required){Colors.NC}")
+
+    if poetry_success:
+        summary_log.append(f"Poetry Installation: {Colors.BRIGHT_GREEN}SUCCESS{Colors.NC}")
+    else:
+        summary_log.append(f"Poetry Installation: {Colors.BOLD_RED}FAILED (Manual intervention may be required){Colors.NC}")
 
     if go_status:
-        summary_log.append(f"Go Installation: SUCCESS")
+        summary_log.append(f"Go Installation: {Colors.BRIGHT_GREEN}SUCCESS{Colors.NC}")
     else:
-        summary_log.append(f"Go Installation: FAILED (Manual intervention may be required)")
+        summary_log.append(f"Go Installation: {Colors.BOLD_RED}FAILED (Manual intervention may be required){Colors.NC}")
 
     if go_tools_status:
-        summary_log.append(f"Go Tools: SUCCESS")
+        summary_log.append(f"Go Tools: {Colors.BRIGHT_GREEN}SUCCESS{Colors.NC}")
     else:
-        summary_log.append(f"Go Tools: PARTIAL/FAILED (Check logs for details)")
+        summary_log.append(f"Go Tools: {Colors.BOLD_RED}PARTIAL/FAILED (Check logs for details){Colors.NC}")
 
     if packages_status:
-        summary_log.append(f"System Packages: SUCCESS")
+        summary_log.append(f"System Packages: {Colors.BRIGHT_GREEN}SUCCESS{Colors.NC}")
     else:
-        summary_log.append(f"System Packages: PARTIAL/FAILED (Check logs for details)")
+        summary_log.append(f"System Packages: {Colors.BOLD_RED}PARTIAL/FAILED (Check logs for details){Colors.NC}")
 
     if python_tools_status:
-        summary_log.append(f"Python Tools: SUCCESS")
+        summary_log.append(f"Python Tools: {Colors.BRIGHT_GREEN}SUCCESS{Colors.NC}")
     else:
-        summary_log.append(f"Python Tools: PARTIAL/FAILED (Check logs for details)")
+        summary_log.append(f"Python Tools: {Colors.BOLD_RED}PARTIAL/FAILED (Check logs for details){Colors.NC}")
 
     if git_repos_status:
-        summary_log.append(f"Git Repositories: SUCCESS")
+        summary_log.append(f"Git Repositories: {Colors.BRIGHT_GREEN}SUCCESS{Colors.NC}")
     else:
-        summary_log.append(f"Git Repositories: PARTIAL/FAILED (Check logs for details)")
+        summary_log.append(f"Git Repositories: {Colors.BOLD_RED}PARTIAL/FAILED (Check logs for details){Colors.NC}")
 
-    summary_log.append(f"=====================================")
+    summary_log.append(f"{Colors.BOLD_MAGENTA}====================================={Colors.NC}")
 
     # Print summary to console
     for line in summary_log:
@@ -985,7 +990,7 @@ def install_single(tool_name):
     install_multiple(tool_name)
 
 def install_multiple(tools_str):
-    logging.info(f"--- Installing multiple tools ---")
+    logging.info(f"{Colors.BOLD_MAGENTA}--- Installing multiple tools ---{Colors.NC}")
     
     # Ensure system dependencies are installed first
     deps_success, deps_already_installed = install_dependencies()
@@ -993,7 +998,7 @@ def install_multiple(tools_str):
         logging.error(f"System dependency installation failed. Aborting tool installation.")
         return
     if not deps_already_installed:
-        logging.info(f"--- 🔧 Installing system dependencies ---")
+        logging.info(f"{Colors.BRIGHT_CYAN}--- 🔧 Installing system dependencies ---{Colors.NC}")
 
     # Ensure Poetry is installed
     poetry_success, poetry_already_installed = install_poetry()
@@ -1001,7 +1006,7 @@ def install_multiple(tools_str):
         logging.error(f"Poetry installation failed. Aborting tool installation.")
         return
     if not poetry_already_installed:
-        logging.info(f"--- Installing Poetry ---")
+        logging.info(f"{Colors.BRIGHT_CYAN}--- Installing Poetry ---{Colors.NC}")
 
     tool_names = [tool.strip() for tool in tools_str.split(',')]
 
@@ -1087,7 +1092,7 @@ def display_all(output_format="text"):
         print(json.dumps(ALL_TOOLS, indent=4))
         return
 
-    logging.info(f"Available tools:")
+    logging.info(f"{Colors.BOLD_MAGENTA}Available tools:{Colors.NC}")
     all_tools = sorted(ALL_TOOLS.keys(), key=str.lower)
     if not all_tools:
         logging.warning(f"  No tools available.")
@@ -1109,7 +1114,7 @@ def display_all(output_format="text"):
     
     if num_columns == 1:
         for tool in all_tools:
-            print(f"{Colors.GREEN}- {tool}{Colors.NC}")
+            print(f"{Colors.BRIGHT_MAGENTA}- {tool}{Colors.NC}")
         return
 
     
@@ -1117,12 +1122,12 @@ def display_all(output_format="text"):
         row_tools = all_tools[i:i + num_columns]
         row_output_parts = []
         for tool in row_tools:
-            row_output_parts.append(f"{Colors.GREEN}- {tool:<{max_len}}{Colors.NC}")
+            row_output_parts.append(f"{Colors.BRIGHT_MAGENTA}- {tool:<{max_len}}{Colors.NC}")
 
         print((" " * min_column_spacing).join(row_output_parts))
 
 def checking_health():
-    logging.info(f"Performing health check on all tools...")
+    logging.info(f"{Colors.BOLD_MAGENTA}--- Performing health check on all tools ---{Colors.NC}")
     all_tool_names = sorted(ALL_TOOLS.keys())
     installed_count = 0
     total_tools = len(all_tool_names)
@@ -1135,36 +1140,40 @@ def checking_health():
         
         tool_path = shutil.which(tool_name) or shutil.which(tool_name.lower())
         if tool_path:
-            logging.info(f"  - {tool_name}: Installed (at {tool_path})")
+            logging.info(f"  {Colors.BRIGHT_GREEN}✔ {tool_name}:{Colors.NC} Installed ({Colors.BRIGHT_YELLOW}{tool_path}{Colors.NC})")
             is_installed = True
         
         elif tool_type == "python_git":
             repo_path = os.path.join(config["PATHS"].get("python_dir", DEFAULT_PYTHON_INSTALL_DIR), tool_name)
             if os.path.exists(repo_path):
-                logging.info(f"  - {tool_name}: Installed (Python Git Repo) (at {repo_path})")
+                logging.info(f"  {Colors.BRIGHT_GREEN}✔ {tool_name}:{Colors.NC} Installed {Colors.NC}{Colors.BRIGHT_GREEN}(Python Git Repo){Colors.NC} ({Colors.BRIGHT_YELLOW}{repo_path}{Colors.NC})")
                 is_installed = True
         
         elif tool_type == "git":
             repo_path = os.path.join(config["PATHS"].get("git_dir", DEFAULT_GIT_INSTALL_DIR), tool_name)
             if os.path.exists(repo_path):
-                logging.info(f"  - {tool_name}: Installed (Git Repo) (at {repo_path})")
+                logging.info(f"  {Colors.BRIGHT_GREEN}✔ {tool_name}:{Colors.NC} Installed {Colors.BRIGHT_GREEN}(Git Repo) {Colors.NC}({Colors.BRIGHT_YELLOW}{repo_path}{Colors.NC})")
                 is_installed = True
         elif tool_type == "go":
             go_bin_dir = config["PATHS"].get("go_bin_dir", DEFAULT_GO_BIN_DIR)
             huntools_go_bin_dir = os.path.join(os.environ["HOME"], ".huntools", "go")
             if os.path.exists(os.path.join(go_bin_dir, tool_name.lower())):
-                logging.info(f"  - {tool_name}: Installed (at {os.path.join(go_bin_dir, tool_name.lower())})")
+                logging.info(f"  {Colors.BRIGHT_GREEN}✔ {tool_name}:{Colors.NC} Installed ({Colors.BRIGHT_YELLOW}{os.path.join(go_bin_dir, tool_name.lower())}{Colors.NC})")
                 is_installed = True
             elif os.path.exists(os.path.join(huntools_go_bin_dir, tool_name.lower())):
-                logging.info(f"  - {tool_name}: Installed (at {os.path.join(huntools_go_bin_dir, tool_name.lower())})")
+                logging.info(f"  {Colors.BRIGHT_GREEN}✔ {tool_name}:{Colors.NC} Installed ({Colors.BRIGHT_YELLOW}{os.path.join(huntools_go_bin_dir, tool_name.lower())}{Colors.NC})")
                 is_installed = True
 
         if is_installed:
             installed_count += 1
         else:
-            logging.error(f"  - {tool_name}: Not Found")
+            logging.error(f"  {Colors.BOLD_RED}✖ {tool_name}:{Colors.NC} {Colors.BOLD_RED}Not Found{Colors.NC}")
     
-    logging.info(f"Summary: {installed_count}/{total_tools} tools installed.")
+    logging.info(f"{Colors.BOLD_MAGENTA}--- Health Check Summary ---{Colors.NC}")
+    logging.info(f"Total tools: {total_tools}")
+    logging.info(f"Installed: {Colors.BRIGHT_GREEN}{installed_count}{Colors.NC}")
+    logging.info(f"Not Installed: {Colors.BOLD_RED}{total_tools - installed_count}{Colors.NC}")
+    logging.info(f"{Colors.BOLD_MAGENTA}Overall Status: {Colors.BRIGHT_GREEN if installed_count == total_tools else Colors.BOLD_RED}{installed_count}/{total_tools} tools installed{Colors.NC}")
 
 def update_single(tool_name):
     logging.info(f"Updating single tool: {tool_name}")
@@ -1362,19 +1371,19 @@ def remove_single(tool_name, force=False):
 
     if not force:
         if tool_location == "Unknown" or (tool_info["type"] in ["python_git", "git"] and not os.path.exists(tool_location)):
-            logging.warning(f"⚠️  Warning: Could not determine the exact installation path for {tool_name}. Proceeding with generic removal attempt.")
+            logging.warning(f"{Colors.BRIGHT_RED}⚠️  Warning: Could not determine the exact installation path for {tool_name}. Proceeding with generic removal attempt.{Colors.NC}")
 
-        logging.warning(f"⚠️  WARNING: You are about to remove {tool_name}.")
-        logging.warning(f"📍 Location: {tool_location}")
+        logging.warning(f"{Colors.BRIGHT_RED}⚠️  WARNING: You are about to remove {tool_name}.{Colors.NC}")
+        logging.warning(f"{Colors.BRIGHT_RED}📍 Location: {tool_location}{Colors.NC}")
         if needs_sudo:
-            logging.warning(f"🚨 This tool is in a system-protected directory and may require 'sudo'.")
+            logging.warning(f"{Colors.BRIGHT_RED}🚨 This tool is in a system-protected directory and may require 'sudo'.{Colors.NC}")
 
-        confirmation = input(f"{Colors.YELLOW}Are you sure you want to proceed? (yes/no): {Colors.NC}").lower()
+        confirmation = input(f"{Colors.BRIGHT_RED}Are you sure you want to proceed? (yes/no): {Colors.NC}").lower()
         if confirmation != 'yes':
-            logging.info(f"Removal of {tool_name} aborted.")
+            logging.info(f"{Colors.BRIGHT_CYAN}Removal of {tool_name} aborted.{Colors.NC}")
             return
     else:
-        logging.info(f"Force removal of {tool_name} initiated.")
+        logging.info(f"{Colors.BRIGHT_CYAN}Force removal of {tool_name} initiated.{Colors.NC}")
 
     tool_type = tool_info["type"]
     try:
@@ -1456,11 +1465,11 @@ def get_installed_tools_count():
 
 def remove_all(force=False):
     installed_tool_count = get_installed_tools_count()
-    logging.warning(f"⚠️  WARNING: You are about to remove {installed_tool_count} currently installed huntools. This action is irreversible.")
+    logging.warning(f"{Colors.BRIGHT_RED}⚠️  WARNING: You are about to remove {installed_tool_count} currently installed huntools. This action is irreversible.{Colors.NC}")
     if not force:
-        confirmation = input(f"{Colors.YELLOW}Are you sure you want to proceed? (yes/no): {Colors.NC}").lower()
+        confirmation = input(f"{Colors.BRIGHT_RED}Are you sure you want to proceed? (yes/no): {Colors.NC}").lower()
         if confirmation != 'yes':
-            logging.info(f"Removal aborted.")
+            logging.info(f"{Colors.BRIGHT_CYAN}Removal aborted.{Colors.NC}")
             return
 
     logging.info(f"--- Removing all installed tools ---")
@@ -1482,11 +1491,11 @@ def remove_all(force=False):
     logging.warning(f"Note: Some system packages might require manual removal if not fully uninstalled by individual tool removal.")
 
 def clean_all(force=False):
-    logging.warning(f"⚠️  WARNING: You are about to purge delete all data, including configuration. This action is irreversible.")
+    logging.warning(f"{Colors.BRIGHT_RED}⚠️  WARNING: You are about to purge delete all data, including configuration. This action is irreversible.{Colors.NC}")
     if not force:
-        confirmation = input(f"{Colors.YELLOW}Are you sure you want to proceed? (yes/no): {Colors.NC}").lower()
+        confirmation = input(f"{Colors.BRIGHT_RED}Are you sure you want to proceed? (yes/no): {Colors.NC}").lower()
         if confirmation != 'yes':
-            logging.info(f"Purge aborted.")
+            logging.info(f"{Colors.BRIGHT_CYAN}Purge aborted.{Colors.NC}")
             return
 
     logging.info(f"Purging all huntools data...")
@@ -1580,26 +1589,26 @@ def show_changelog():
             line = line.rstrip()
 
             if line.startswith("# "):
-                print(f"{Colors.BOLD_RED}{line.replace('# ', '')}{Colors.NC}")
+                print(f"{Colors.BOLD_MAGENTA}{line.replace('# ', '')}{Colors.NC}")
             elif line.startswith("## "):
-                print(f"{Colors.CYAN}{line.replace('## ', '')}{Colors.NC}")
+                print(f"{Colors.BRIGHT_CYAN}{line.replace('## ', '')}{Colors.NC}")
             elif line.startswith("### "):
-                print(f"{Colors.MAGENTA}{line.replace('### ', '')}{Colors.NC}")
+                print(f"{Colors.BRIGHT_BLUE}{line.replace('### ', '')}{Colors.NC}")
             elif line.startswith("- "):
-                formatted_line = line.replace("- ", f"{Colors.GREEN}- {Colors.NC}")
-                formatted_line = re.sub(r'\*\*(.*?)\*\*', f'{Colors.YELLOW}\1{Colors.NC}', formatted_line) # Bold
-                formatted_line = re.sub(r'_(.*?)_', f'{Colors.ITALIC}\1{Colors.NC}', formatted_line) # Italics with underscore
-                formatted_line = re.sub(r'\*(.*?)\*', f'{Colors.ITALIC}\1{Colors.NC}', formatted_line) # Italics with asterisk
-                formatted_line = re.sub(r'`(.*?)`', f'{Colors.BLUE}\1{Colors.NC}', formatted_line) # Inline code
+                formatted_line = line.replace("- ", f"{Colors.BRIGHT_GREEN}- {Colors.NC}")
+                formatted_line = re.sub(r'\*\*(.*?)\*\*', f'{Colors.YELLOW}\\1{Colors.NC}', formatted_line) # Bold
+                formatted_line = re.sub(r'_(.*?)_', f'{Colors.MAGENTA}\\1{Colors.NC}', formatted_line) # Italics with underscore
+                formatted_line = re.sub(r'\*(.*?)\*', f'{Colors.MAGENTA}\\1{Colors.NC}', formatted_line) # Italics with asterisk
+                formatted_line = re.sub(r'`(.*?)`', f'{Colors.BRIGHT_YELLOW}\\1{Colors.NC}', formatted_line) # Inline code
                 print(formatted_line)
             elif not line.strip():
                 print(line)
             else:
                 formatted_line = line
                 formatted_line = re.sub(r'\*\*(.*?)\*\*', f'{Colors.YELLOW}\1{Colors.NC}', formatted_line) # Bold
-                formatted_line = re.sub(r'_(.*?)_', f'{Colors.ITALIC}\1{Colors.NC}', formatted_line) # Italics with underscore
-                formatted_line = re.sub(r'\*(.*?)\*', f'{Colors.ITALIC}\1{Colors.NC}', formatted_line) # Italics with asterisk
-                formatted_line = re.sub(r'`(.*?)`', f'{Colors.BLUE}\1{Colors.NC}', formatted_line) # Inline code
+                formatted_line = re.sub(r'_(.*?)_', f'{Colors.MAGENTA}\1{Colors.NC}', formatted_line) # Italics with underscore
+                formatted_line = re.sub(r'\*(.*?)\*', f'{Colors.MAGENTA}\1{Colors.NC}', formatted_line) # Italics with asterisk
+                formatted_line = re.sub(r'`(.*?)`', f'{Colors.BRIGHT_YELLOW}\1{Colors.NC}', formatted_line) # Inline code
                 print(f"{Colors.NC}{formatted_line}{Colors.NC}")
 
     except Exception as e:
@@ -1666,7 +1675,7 @@ CMD ["bash"]
         except IOError as e:
             logging.error(f"Error writing Dockerfile to {filename}: {e}")
     else:
-        print(f"{Colors.BLUE}{dockerfile_content}{Colors.NC}")
+        print(f"{Colors.BRIGHT_YELLOW}{dockerfile_content}{Colors.NC}")
 
 
 class CustomHelpFormatter(argparse.HelpFormatter):
@@ -1679,7 +1688,7 @@ class CustomHelpFormatter(argparse.HelpFormatter):
 
             for subparser_action in action._choices_actions:
                 if subparser_action.help: 
-                    parts.append(f"    {Colors.YELLOW}{subparser_action.dest:<{max_len}}{Colors.NC}    {Colors.GREEN}{subparser_action.help}{Colors.NC}") # Add more indentation
+                    parts.append(f"    {Colors.BRIGHT_MAGENTA}{subparser_action.dest:<{max_len}}{Colors.NC}    {Colors.BRIGHT_CYAN}{subparser_action.help}{Colors.NC}") # Add more indentation
             return "\n".join(parts)
         else:
             action_header = self._format_action_invocation(action)
@@ -1687,37 +1696,40 @@ class CustomHelpFormatter(argparse.HelpFormatter):
             help_text = self._expand_help(action)
             
             if help_text:
-                return f"  {action_header} {help_text}\n"
+                return f"  {Colors.BRIGHT_YELLOW}{action_header}{Colors.NC} {Colors.BRIGHT_CYAN}{help_text}{Colors.NC}\n"
             else:
-                return f"  {action_header}\n"
+                return f"  {Colors.BRIGHT_YELLOW}{action_header}{Colors.NC}\n"
 
     def _format_action_invocation(self, action):
         if not action.option_strings:
             metavar, = self._metavar_formatter(action, action.dest)(1)
-            return f"{Colors.YELLOW}{metavar}{Colors.NC}"
+            return f"{Colors.BRIGHT_BLUE}{metavar}{Colors.NC}"
         else:
             parts = []
             if action.nargs == 0:
-                parts.extend([f"{Colors.YELLOW}{s}{Colors.NC}" for s in action.option_strings])
+                parts.extend([f"{Colors.BRIGHT_YELLOW}{s}{Colors.NC}" for s in action.option_strings])
             else:
                 default = self._get_default_metavar_for_optional(action)
                 args_string = self._format_args(action, default)
                 for option_string in action.option_strings:
-                    parts.append(f'{Colors.YELLOW}{option_string}{Colors.NC} {Colors.CYAN}{args_string}{Colors.NC}')
+                    parts.append(f'{Colors.BRIGHT_YELLOW}{option_string}{Colors.NC} {Colors.BRIGHT_BLUE}{args_string}{Colors.NC}')
             return ', '.join(parts)
 
     def _format_text(self, text):
         if text:
-            return f'{Colors.WHITE}{super()._format_text(text)}{Colors.NC}'
+            return f'{Colors.BRIGHT_WHITE}{super()._format_text(text)}{Colors.NC}'
         return ''
 
     def _expand_help(self, action):
-        return f'{Colors.GREEN}{super()._expand_help(action)}{Colors.NC}'
+        return f'{Colors.BRIGHT_CYAN}{super()._expand_help(action)}{Colors.NC}'
 
     def _format_action_group_name(self, action_group):
         if action_group.title is None:
             return ''
-        return f"{Colors.YELLOW}{action_group.title}:{Colors.NC}\n"
+        return f"{Colors.BOLD_MAGENTA}{action_group.title}:{Colors.NC}\n"
+
+    def _format_header(self, text):
+        return f"{Colors.BOLD_MAGENTA}{text}{Colors.NC}\n"
 
 
 # Main function to parse arguments and execute commands 
@@ -1727,9 +1739,9 @@ def main():
         show_banner()
 
         parser = argparse.ArgumentParser(
-            description="A streamlined tool for managing your bug hunting arsenal.",
+            description=f"{Colors.BRIGHT_WHITE}A streamlined tool for managing your bug hunting arsenal.{Colors.NC}",
             formatter_class=CustomHelpFormatter,
-            usage="huntools <command> [flags]"
+            usage=f"{Colors.BRIGHT_GREEN}huntools <command> [flags]{Colors.NC}"
         )
         parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output.")
         parser.add_argument("-d", "--debug", action="store_true", help="Enable debug output.")
