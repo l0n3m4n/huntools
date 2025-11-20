@@ -106,7 +106,7 @@ class ColoredFormatter(logging.Formatter):
 
 def setup_logging(verbose, debug):
     logger = logging.getLogger()
-    logger.setLevel(logging.WARNING) # Default level
+    logger.setLevel(logging.INFO) # Default level
 
     if verbose:
         logger.setLevel(logging.INFO)
@@ -534,16 +534,19 @@ def install_go():
 
         logging.info(f"Installing Go...\n")
         go_install_dir = os.path.join(os.environ["HOME"], ".huntools", "go")
-        os.makedirs(go_install_dir, exist_ok=True)
         
-        # Remove old Go installation from the user-specific path
+        # Remove old Go installation from the user-specific path (if any)
+        # This should happen BEFORE creating the directory for the new installation
         subprocess.run(["rm", "-rf", go_install_dir], check=True, capture_output=True)
+        
+        os.makedirs(go_install_dir, exist_ok=True) # This creates the directory
         
         # Extract Go into the user-specific path
         subprocess.run(["tar", "-C", go_install_dir, "-xzf", go_tar_path], check=True, capture_output=True)
         os.remove(go_tar_path)
 
-        goroot = go_install_dir
+        # After extraction, Go binaries are typically in a 'go' subdirectory within the install_dir
+        goroot = os.path.join(go_install_dir, "go")
         gopath = DEFAULT_GO_WORKSPACE_DIR
         
         logging.info(f"Configuring environment variables...\n")
@@ -567,6 +570,15 @@ def install_go():
             logging.warning(f"Then run 'source ~/.config/fish/config.fish' or restart your terminal.\n")
 
         logging.info(f"Go has been installed successfully.")
+        
+        # Set environment variables for the current process
+        os.environ["GOROOT"] = goroot
+        os.environ["GOPATH"] = gopath
+        os.environ["PATH"] = f"{gopath}/bin:{goroot}/bin:{os.environ['PATH']}"
+        logging.debug(f"GOROOT set to: {os.environ['GOROOT']}")
+        logging.debug(f"GOPATH set to: {os.environ['GOPATH']}")
+        logging.debug(f"PATH updated to: {os.environ['PATH']}")
+
         logging.warning(f"Please restart your shell or run 'source ~/.bashrc' to apply the changes.\n")
         return True
         
@@ -1668,6 +1680,8 @@ def main():
 
         # Install command
         install_parser = subparsers.add_parser("install", help="Install tools", add_help=False, formatter_class=CustomHelpFormatter)
+        install_parser.add_argument("-v", "--verbose", action="store_true", help=argparse.SUPPRESS)
+        install_parser.add_argument("-d", "--debug", action="store_true", help=argparse.SUPPRESS)
         install_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
         install_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
         install_parser.add_argument("-s", dest="install_single", help="Install a single, specified tool from the available list.", metavar="TOOL")
@@ -1680,6 +1694,8 @@ def main():
 
         # Reinstall command
         reinstall_parser = subparsers.add_parser("reinstall", help="Reinstall a tool", add_help=False, formatter_class=CustomHelpFormatter)
+        reinstall_parser.add_argument("-v", "--verbose", action="store_true", help=argparse.SUPPRESS)
+        reinstall_parser.add_argument("-d", "--debug", action="store_true", help=argparse.SUPPRESS)
         reinstall_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
         reinstall_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
         reinstall_parser.add_argument("tool_name", help="The name of the tool to reinstall")
@@ -1687,6 +1703,8 @@ def main():
 
         # Update command
         update_parser = subparsers.add_parser("update", help="Update tools", add_help=False, formatter_class=CustomHelpFormatter)
+        update_parser.add_argument("-v", "--verbose", action="store_true", help=argparse.SUPPRESS)
+        update_parser.add_argument("-d", "--debug", action="store_true", help=argparse.SUPPRESS)
         update_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
         update_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
         update_parser.add_argument("-s", dest="update_single", help="Update a single, specified tool to its latest version.", metavar="TOOL")
@@ -1702,6 +1720,8 @@ def main():
 
         # Remove command
         remove_parser = subparsers.add_parser("remove", help="Remove tools", add_help=False, formatter_class=CustomHelpFormatter)
+        remove_parser.add_argument("-v", "--verbose", action="store_true", help=argparse.SUPPRESS)
+        remove_parser.add_argument("-d", "--debug", action="store_true", help=argparse.SUPPRESS)
         remove_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
         remove_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
         remove_parser.add_argument("-rs", dest="remove_single", help="Remove a single, specified tool.", metavar="TOOL")
@@ -1718,6 +1738,8 @@ def main():
 
         # Other commands
         display_parser = subparsers.add_parser("display", help="Display all tools", add_help=False, formatter_class=CustomHelpFormatter)
+        display_parser.add_argument("-v", "--verbose", action="store_true", help=argparse.SUPPRESS)
+        display_parser.add_argument("-d", "--debug", action="store_true", help=argparse.SUPPRESS)
         display_parser.add_argument("-a", dest="display_all", action="store_true", help="Show all tools available for installation.")
         display_parser.add_argument("--all", dest="display_all", action="store_true", help=argparse.SUPPRESS)
         display_parser.add_argument("-f", "--format", dest="output_format", default="text", help="Specify the output format (text or json).")
@@ -1725,11 +1747,15 @@ def main():
         display_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
         
         check_parser = subparsers.add_parser("check", help="Check tool health", add_help=False, formatter_class=CustomHelpFormatter)
+        check_parser.add_argument("-v", "--verbose", action="store_true", help=argparse.SUPPRESS)
+        check_parser.add_argument("-d", "--debug", action="store_true", help=argparse.SUPPRESS)
         check_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
         check_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
         check_parser.add_argument("-hc", dest="checking_health", action="store_true", help="Perform a health check on all installed tools.")
 
         show_parser = subparsers.add_parser("show", help="Show information", add_help=False, formatter_class=CustomHelpFormatter)
+        show_parser.add_argument("-v", "--verbose", action="store_true", help=argparse.SUPPRESS)
+        show_parser.add_argument("-d", "--debug", action="store_true", help=argparse.SUPPRESS)
         show_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
         show_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
         show_parser.add_argument("-pl", dest="path", action="store_true", help="Display all relevant paths used by huntools.")
@@ -1738,6 +1764,8 @@ def main():
         show_parser.add_argument("--changelog", action="store_true", help=argparse.SUPPRESS)
 
         config_parser = subparsers.add_parser("config", help="Configure huntools", add_help=False, formatter_class=CustomHelpFormatter)
+        config_parser.add_argument("-v", "--verbose", action="store_true", help=argparse.SUPPRESS)
+        config_parser.add_argument("-d", "--debug", action="store_true", help=argparse.SUPPRESS)
         config_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
         config_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
         config_parser.add_argument("-cp", dest="config_path", help="Specify a custom path for the configuration file.\n    (Default: ~/.config/huntools/config.yml)")
@@ -1749,6 +1777,8 @@ def main():
 
         # Docker command
         docker_parser = subparsers.add_parser("docker", help="Manage Docker image", add_help=False, formatter_class=CustomHelpFormatter)
+        docker_parser.add_argument("-v", "--verbose", action="store_true", help=argparse.SUPPRESS)
+        docker_parser.add_argument("-d", "--debug", action="store_true", help=argparse.SUPPRESS)
         docker_parser.add_argument("-h", action="help", help=argparse.SUPPRESS)
         docker_parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
         docker_parser.add_argument("-g", "--generate", action="store_true", help="Generate a Dockerfile for Huntools.")
