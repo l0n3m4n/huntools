@@ -14,7 +14,7 @@ import urllib.request
 import json
 import concurrent.futures
 from datetime import datetime
-
+import logging
 
 
 class Colors:
@@ -80,11 +80,58 @@ class Colors:
     BG_BRIGHT_WHITE = '\033[107m'
 
 
-def _log_error(message):
-    clean_message = re.sub(r'\x1b\[([0-9]{1,2};)?([0-9]{1,2})?m', '', message)
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open("errors.log", "a") as f:
-        f.write(f"[{timestamp}] {clean_message}\n")
+class ColoredFormatter(logging.Formatter):
+    FORMAT = "[%(levelname)s] %(message)s"
+
+    LOG_COLORS = {
+        logging.DEBUG: Colors.BRIGHT_BLACK,
+        logging.INFO: Colors.WHITE,
+        logging.WARNING: Colors.YELLOW,
+        logging.ERROR: Colors.RED,
+        logging.CRITICAL: Colors.BOLD_RED
+    }
+
+    def format(self, record):
+        log_fmt = self.LOG_COLORS.get(record.levelno, Colors.NC) + self.FORMAT + Colors.NC
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
+
+
+# The _log_error function is replaced by logging.error
+# def _log_error(message):
+#     clean_message = re.sub(r'\x1b\[([0-9]{1,2};)?([0-9]{1,2})?m', '', message)
+#     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+#     with open("errors.log", "a") as f:
+#         f.write(f"[{timestamp}] {clean_message}\n")
+
+def setup_logging(verbose, debug):
+    logger = logging.getLogger()
+    logger.setLevel(logging.WARNING) # Default level
+
+    if verbose:
+        logger.setLevel(logging.INFO)
+    if debug:
+        logger.setLevel(logging.DEBUG)
+
+    # Console handler with colored output
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(ColoredFormatter())
+    logger.addHandler(console_handler)
+
+    # File handler for all logs
+    file_handler = logging.FileHandler("huntools.log")
+    file_handler.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s"))
+    file_handler.setLevel(logging.DEBUG) # Capture all levels to file
+    logger.addHandler(file_handler)
+
+    # Separate file handler for errors.log (only ERROR and CRITICAL)
+    error_file_handler = logging.FileHandler("errors.log")
+    error_file_handler.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s"))
+    error_file_handler.setLevel(logging.ERROR)
+    logger.addHandler(error_file_handler)
+
+    # Disable propagation to avoid duplicate messages from root logger
+    logger.propagate = False
 
 
 def show_banner():
@@ -262,7 +309,7 @@ def validate_config(config):
     if "PATHS" in config:
         for key, path in config["PATHS"].items():
             if key.endswith("_dir") and not os.path.isdir(path):
-                print(f"{Colors.RED}Error: The directory '{path}' for '{key}' does not exist.{Colors.NC}")
+                logging.error(f"The directory '{path}' for '{key}' does not exist.")
                 sys.exit(1)
 
 def load_config():
@@ -332,10 +379,10 @@ def get_package_manager():
         return None
 
 def install_dependencies():
-    print(f"{Colors.GREEN}--- 🔧 Installing system dependencies ---{Colors.NC}")
+    logging.info(f"--- 🔧 Installing system dependencies ---")
     package_manager = get_package_manager()
     if not package_manager:
-        print(f"{Colors.RED}Unsupported OS. Please install dependencies manually.{Colors.NC}")
+        logging.error(f"Unsupported OS. Please install dependencies manually.")
         return False
 
     deps = {
@@ -347,56 +394,56 @@ def install_dependencies():
 
     try:
         if package_manager == "apt-get":
-            print(f"{Colors.GREEN}Updating package list...{Colors.NC}")
+            logging.info(f"Updating package list...")
             subprocess.run(f"sudo {package_manager} update -y", shell=True, check=True, capture_output=True)
-            print(f"{Colors.GREEN}Installing dependencies...{Colors.NC}")
+            logging.info(f"Installing dependencies...")
             try:
                 subprocess.run(f"sudo {package_manager} install -y {deps[package_manager]}", shell=True, check=True, capture_output=True)
             except subprocess.CalledProcessError as e:
                 if "Unmet dependencies" in e.stderr.decode():
-                    print(f"{Colors.YELLOW}Unmet dependencies detected. Attempting to fix with 'apt --fix-broken install'...{Colors.NC}")
+                    logging.warning(f"Unmet dependencies detected. Attempting to fix with 'apt --fix-broken install'...")
                     subprocess.run(f"sudo {package_manager} --fix-broken install -y", shell=True, check=True, capture_output=True)
-                    print(f"{Colors.GREEN}Retrying dependency installation...{Colors.NC}")
+                    logging.info(f"Retrying dependency installation...")
                     subprocess.run(f"sudo {package_manager} install -y {deps[package_manager]}", shell=True, check=True, capture_output=True)
                 else:
                     raise # Re-raise if it's a different error
         elif package_manager == "yum":
-            print(f"{Colors.CYAN}Installing dependencies...{Colors.NC}")
+            logging.info(f"Installing dependencies...")
             subprocess.run(f"sudo {package_manager} install -y {deps[package_manager]}", shell=True, check=True, capture_output=True)
         elif package_manager == "pacman":
-            print(f"{Colors.CYAN}Updating system...{Colors.NC}")
+            logging.info(f"Updating system...")
             subprocess.run(f"sudo {package_manager} -Syu --noconfirm", shell=True, check=True, capture_output=True)
-            print(f"{Colors.CYAN}Installing dependencies...{Colors.NC}")
+            logging.info(f"Installing dependencies...")
             subprocess.run(f"sudo {package_manager} -S --noconfirm {deps[package_manager]}", shell=True, check=True, capture_output=True)
         elif package_manager == "brew":
-            print(f"{Colors.CYAN}Updating Homebrew...{Colors.NC}")
+            logging.info(f"Updating Homebrew...")
             subprocess.run(f"{package_manager} update", shell=True, check=True, capture_output=True)
-            print(f"{Colors.CYAN}Installing dependencies...{Colors.NC}")
+            logging.info(f"Installing dependencies...")
             subprocess.run(f"{package_manager} install {deps[package_manager]}", shell=True, check=True, capture_output=True)
         
-        print(f"{Colors.GREEN}System dependencies installed successfully.{Colors.NC}\n")
+        logging.info(f"System dependencies installed successfully.\n")
 
         # Install Poetry
-        print(f"{Colors.CYAN}--- Installing Poetry ---{Colors.NC}")
+        logging.info(f"--- Installing Poetry ---")
         if shutil.which("poetry"):
-            print(f"{Colors.GREEN}Poetry is already installed.{Colors.NC}\n")
+            logging.info(f"Poetry is already installed.\n")
         else:
             try:
                 subprocess.run("curl -sSL https://install.python-poetry.org | python3 -", shell=True, check=True, capture_output=True)
-                print(f"{Colors.GREEN}Poetry installed successfully.{Colors.NC}\n")
+                logging.info(f"Poetry installed successfully.\n")
             except subprocess.CalledProcessError as e:
                 error_message = f"Error installing Poetry: {e}\nStderr: {e.stderr.decode()}"
-                _log_error(error_message)
-                print(f"{Colors.RED}Error installing Poetry: {e}{Colors.NC}")
-                print(f"{Colors.RED}Stderr: {e.stderr.decode()}{Colors.NC}")
+                logging.error(error_message)
+                logging.error(f"Error installing Poetry: {e}")
+                logging.error(f"Stderr: {e.stderr.decode()}")
                 return False
 
         return True
     except subprocess.CalledProcessError as e:
         error_message = f"Error installing dependencies: {e}\nStderr: {e.stderr.decode()}"
-        _log_error(error_message)
-        print(f"{Colors.RED}Error installing dependencies: {e}{Colors.NC}")
-        print(f"{Colors.RED}Stderr: {e.stderr.decode()}{Colors.NC}")
+        logging.error(error_message)
+        logging.error(f"Error installing dependencies: {e}")
+        logging.error(f"Stderr: {e.stderr.decode()}")
         return False
 
 def _add_go_env_to_shell_config(shell_config_path, goroot, gopath):
@@ -423,26 +470,26 @@ def _add_go_env_to_shell_config(shell_config_path, goroot, gopath):
         with open(shell_config_path, "a") as f:
             for line in lines_to_append:
                 f.write(line)
-        print(f"{Colors.GREEN}Go environment variables added/updated in {shell_config_path}.{Colors.NC}")
+        logging.info(f"Go environment variables added/updated in {shell_config_path}.")
         return True
     else:
-        print(f"{Colors.YELLOW}Go environment variables already present in {shell_config_path}. No changes made.{Colors.NC}")
+        logging.warning(f"Go environment variables already present in {shell_config_path}. No changes made.")
         return False
 
 def install_go():
-    print(f"{Colors.CYAN}--- Checking and Installing Go ---{Colors.NC}")
+    logging.info(f"--- Checking and Installing Go ---")
     if shutil.which("go"):
-        print(f"{Colors.GREEN}Go is already installed.{Colors.NC}\n")
+        logging.info(f"Go is already installed.\n")
         return True
 
-    print(f"{Colors.CYAN}Installing Go...{Colors.NC}")
+    logging.info(f"Installing Go...")
     try:
         try:
             version_url = "https://go.dev/VERSION?m=text"
             version_res = subprocess.run(["curl", "-s", version_url], capture_output=True, text=True, check=True)
             version = version_res.stdout.splitlines()[0].strip()
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            print(f"{Colors.YELLOW}Could not fetch latest Go version ({e}). Falling back to a default version.{Colors.NC}")
+            logging.warning(f"Could not fetch latest Go version ({e}). Falling back to a default version.")
             version = "go1.20.7"
 
         arch = platform.machine()
@@ -455,17 +502,17 @@ def install_go():
         elif arch == "armv6l":
             arch = "armv6l"
         else:
-            print(f"{Colors.RED}Unsupported architecture: {arch}. Please install Go manually.{Colors.NC}")
+            logging.error(f"Unsupported architecture: {arch}. Please install Go manually.")
             return False
 
         go_url = f"https://dl.google.com/go/{version}.{os_name}-{arch}.tar.gz"
         go_tar_path = "/tmp/go.tar.gz"
         checksum_url = f"{go_url}.sha256"
 
-        print(f"{Colors.CYAN}Downloading Go {version}...{Colors.NC}\n")
+        logging.info(f"Downloading Go {version}...\n")
         subprocess.run(["wget", go_url, "-O", go_tar_path], check=True, capture_output=True)
 
-        print(f"{Colors.CYAN}Verifying checksum...{Colors.NC}\n")
+        logging.info(f"Verifying checksum...\n")
         try:
             checksum_res = subprocess.run(["curl", "-s", checksum_url], capture_output=True, text=True, check=True)
             expected_checksum = checksum_res.stdout.strip()
@@ -477,15 +524,15 @@ def install_go():
             calculated_checksum = sha256_hash.hexdigest()
 
             if expected_checksum != calculated_checksum:
-                print(f"{Colors.RED}Checksum verification failed. The downloaded file may be corrupted.{Colors.NC}")
+                logging.error(f"Checksum verification failed. The downloaded file may be corrupted.")
                 os.remove(go_tar_path)
                 return False
-            print(f"{Colors.GREEN}Checksum verified successfully.{Colors.NC}\n")
+            logging.info(f"Checksum verified successfully.\n")
 
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            print(f"{Colors.YELLOW}Could not verify checksum ({e}). Proceeding with installation at your own risk.{Colors.NC}\n")
+            logging.warning(f"Could not verify checksum ({e}). Proceeding with installation at your own risk.\n")
 
-        print(f"{Colors.CYAN}Installing Go...{Colors.NC}\n")
+        logging.info(f"Installing Go...\n")
         go_install_dir = os.path.join(os.environ["HOME"], ".huntools", "go")
         os.makedirs(go_install_dir, exist_ok=True)
         
@@ -499,7 +546,7 @@ def install_go():
         goroot = go_install_dir
         gopath = DEFAULT_GO_WORKSPACE_DIR
         
-        print(f"{Colors.CYAN}Configuring environment variables...{Colors.NC}\n")
+        logging.info(f"Configuring environment variables...\n")
         
         # Update env .bashrc
         _add_go_env_to_shell_config(os.path.join(os.environ["HOME"], ".bashrc"), goroot, gopath)
@@ -513,24 +560,24 @@ def install_go():
 
         # Special note for fish shell users
         if "fish" in os.environ.get("SHELL", ""):
-            print(f"{Colors.YELLOW}Detected fish shell. Please manually add the following to your ~/.config/fish/config.fish:{Colors.NC}")
-            print(f"{Colors.YELLOW}  set -x GOROOT {goroot}{Colors.NC}")
-            print(f"{Colors.YELLOW}  set -x GOPATH {gopath}{Colors.NC}")
-            print(f"{Colors.YELLOW}  fish_add_path $GOPATH/bin $GOROOT/bin{Colors.NC}")
-            print(f"{Colors.YELLOW}Then run 'source ~/.config/fish/config.fish' or restart your terminal.{Colors.NC}")
+            logging.warning(f"Detected fish shell. Please manually add the following to your ~/.config/fish/config.fish:")
+            logging.warning(f"  set -x GOROOT {goroot}")
+            logging.warning(f"  set -x GOPATH {gopath}")
+            logging.warning(f"  fish_add_path $GOPATH/bin $GOROOT/bin")
+            logging.warning(f"Then run 'source ~/.config/fish/config.fish' or restart your terminal.\n")
 
-        print(f"{Colors.GREEN}Go has been installed successfully.{Colors.NC}")
-        print(f"{Colors.YELLOW}Please restart your shell or run 'source ~/.bashrc' to apply the changes.{Colors.NC}\n")
+        logging.info(f"Go has been installed successfully.")
+        logging.warning(f"Please restart your shell or run 'source ~/.bashrc' to apply the changes.\n")
         return True
         
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
         error_message = f"Error installing Go: {e}"
         if isinstance(e, subprocess.CalledProcessError):
             error_message += f"\nStderr: {e.stderr.decode()}"
-        _log_error(error_message)
-        print(f"{Colors.RED}Error installing Go: {e}{Colors.NC}")
+        logging.error(error_message)
+        logging.error(f"Error installing Go: {e}")
         if isinstance(e, subprocess.CalledProcessError):
-            print(f"{Colors.RED}Stderr: {e.stderr.decode()}{Colors.NC}")
+            logging.error(f"Stderr: {e.stderr.decode()}")
         return False
 
 def _install_tool_worker(tool, tool_info, install_function):
@@ -538,33 +585,33 @@ def _install_tool_worker(tool, tool_info, install_function):
     if tool_info.get("size") == "large":
         response = input(f"{Colors.YELLOW}The tool '{tool}' is large. Do you want to install it? (y/n): {Colors.NC}").lower()
         if response != 'y':
-            print(f"{Colors.YELLOW}Skipping installation of {tool}.{Colors.NC}")
+            logging.warning(f"Skipping installation of {tool}.")
             return tool, "skipped"
 
     existing_path = shutil.which(tool.lower())
     if existing_path:
-        print(f"{Colors.GREEN}{tool} is already installed at {Colors.MAGENTA}{existing_path}{Colors.GREEN}.{Colors.NC}")
+        logging.info(f"{tool} is already installed at {existing_path}.")
         return tool, "success"
 
-    print(f"{Colors.CYAN}Installing {tool}...{Colors.NC}")
+    logging.info(f"Installing {tool}...")
     try:
         install_function(tool)
-        print(f"{Colors.GREEN}{tool} installed successfully.{Colors.NC}")
+        logging.info(f"{tool} installed successfully.")
         return tool, "success"
     except subprocess.CalledProcessError as e:
         error_message = f"Error installing {tool}: {e}\nStderr: {e.stderr.decode()}\nSuggestion: Please check the tool's repository for known issues or try manual installation. Command: {e.cmd}"
-        _log_error(error_message)
-        print(f"\n{Colors.RED}Error installing {tool}: {e}{Colors.NC}")
-        print(f"{Colors.YELLOW}Suggestion: Please check the tool's repository for known issues or try manual installation. Command: {e.cmd}{Colors.NC}\n")
+        logging.error(error_message)
+        logging.error(f"Error installing {tool}: {e}")
+        logging.warning(f"Suggestion: Please check the tool's repository for known issues or try manual installation. Command: {e.cmd}\n")
         return tool, "failed"
     except Exception as e:
         error_message = f"An unexpected error occurred while installing {tool}: {e}"
-        _log_error(error_message)
-        print(f"\n{Colors.RED}An unexpected error occurred while installing {tool}: {e}{Colors.NC}")
+        logging.error(error_message)
+        logging.error(f"An unexpected error occurred while installing {tool}: {e}")
         return tool, "failed"
 
 def _install_tools(title, tools, install_function):
-    print(f"{Colors.CYAN}--- {title} ---{Colors.NC}")
+    logging.info(f"--- {title} ---")
     success_count = 0
     fail_count = 0
     skipped_count = 0
@@ -582,13 +629,13 @@ def _install_tools(title, tools, install_function):
                 else:
                     fail_count += 1
             except Exception as exc:
-                print(f'{Colors.RED}{tool} generated an exception: {exc}{Colors.NC}')
+                logging.error(f'{tool} generated an exception: {exc}')
                 fail_count += 1
 
-    print(f"\n{Colors.CYAN}--- {title} summary ---{Colors.NC}")
-    print(f"{Colors.GREEN}Successfully installed/skipped: {success_count}{Colors.NC}")
-    print(f"{Colors.YELLOW}Skipped: {skipped_count}{Colors.NC}")
-    print(f"{Colors.RED}Failed to install: {fail_count}{Colors.NC}\n")
+    logging.info(f"--- {title} summary ---")
+    logging.info(f"Successfully installed/skipped: {success_count}")
+    logging.warning(f"Skipped: {skipped_count}")
+    logging.error(f"Failed to install: {fail_count}\n")
 
     return fail_count == 0
 
@@ -605,7 +652,7 @@ def install_packages():
     package_tools = [name for name, tool in ALL_TOOLS.items() if tool["type"] == "package"]
     package_manager = get_package_manager()
     if not package_manager:
-        print(f"{Colors.RED}Unsupported OS for package installation. Please install manually: {' '.join(package_tools)}{Colors.NC}")
+        logging.error(f"Unsupported OS for package installation. Please install manually: {' '.join(package_tools)}")
         return False
 
     def _install_package(package):
@@ -627,42 +674,42 @@ def install_python_tools():
     git_success_count = 0
     git_fail_count = 0
 
-    print(f"\n{Colors.CYAN}--- Installing Python tools from Git ---{Colors.NC}")
+    logging.info(f"--- Installing Python tools from Git ---")
 
     for tool_name, tool_info in python_git_tools.items():
         if tool_info.get("size") == "large":
             response = input(f"{Colors.YELLOW}The tool '{tool_name}' is large. Do you want to install it? (y/n): {Colors.NC}").lower()
             if response != 'y':
-                print(f"{Colors.YELLOW}Skipping installation of {tool_name}.{Colors.NC}")
+                logging.warning(f"Skipping installation of {tool_name}.")
                 continue
 
-        print(f"{Colors.CYAN}Installing {tool_name} from git...{Colors.NC}")
+        logging.info(f"Installing {tool_name} from git...")
         repo_path = os.path.join(install_dir, tool_name)
         if os.path.exists(repo_path):
             if not os.path.exists(os.path.join(repo_path, ".git")):
-                print(f"{Colors.YELLOW}Incomplete installation of {tool_name} found. Removing and reinstalling...{Colors.NC}")
+                logging.warning(f"Incomplete installation of {tool_name} found. Removing and reinstalling...")
                 shutil.rmtree(repo_path)
             else:
                 repo_path = os.path.join(install_dir, tool_name)
-                print(f"{Colors.GREEN}{tool_name} is already installed at {Colors.MAGENTA}{repo_path}{Colors.GREEN}.{Colors.NC}")
+                logging.info(f"{tool_name} is already installed at {repo_path}.")
                 git_success_count += 1
                 continue
         try:
             subprocess.run(["git", "clone", tool_info["url"], repo_path], check=True, capture_output=True)
-            print(f"{Colors.GREEN}{tool_name} cloned successfully.{Colors.NC}")
+            logging.info(f"{tool_name} cloned successfully.")
 
             if os.path.exists(os.path.join(repo_path, "poetry.lock")):
-                print(f"{Colors.CYAN}Installing dependencies with poetry...{Colors.NC}")
+                logging.info(f"Installing dependencies with poetry...")
                 subprocess.run(["poetry", "install"], cwd=repo_path, check=True, capture_output=True)
-                print(f"{Colors.GREEN}Dependencies installed successfully.{Colors.NC}")
+                logging.info(f"Dependencies installed successfully.")
 
             git_success_count += 1
 
         except subprocess.CalledProcessError as e:
             error_message = f"Error installing {tool_name}: {e}\nStderr: {e.stderr.decode()}"
-            _log_error(error_message)
-            print(f"{Colors.RED}Error installing {tool_name}: {e}{Colors.NC}")
-            print(f"{Colors.RED}Stderr: {e.stderr.decode()}{Colors.NC}")
+            logging.error(error_message)
+            logging.error(f"Error installing {tool_name}: {e}")
+            logging.error(f"Stderr: {e.stderr.decode()}")
             git_fail_count += 1
 
     # Pip tools
@@ -672,15 +719,15 @@ def install_python_tools():
     
     pip_install_success = _install_tools("Installing Python tools from Pip", pip_tools, _install_pip_tool)
     
-    print(f"\n{Colors.CYAN}--- Python tools installation summary ---{Colors.NC}")
-    print(f"{Colors.GREEN}Successfully installed from Git: {git_success_count}{Colors.NC}")
-    print(f"{Colors.RED}Failed to install from Git: {git_fail_count}{Colors.NC}")
+    logging.info(f"--- Python tools installation summary ---")
+    logging.info(f"Successfully installed from Git: {git_success_count}")
+    logging.error(f"Failed to install from Git: {git_fail_count}")
 
     return git_fail_count == 0 and pip_install_success
 
 
 def install_git_repos():
-    print(f"{Colors.CYAN}--- Cloning other git repositories ---{Colors.NC}")
+    logging.info(f"--- Cloning other git repositories ---")
     git_repos = {name: tool["url"] for name, tool in ALL_TOOLS.items() if tool["type"] == "git"}
     install_dir = config["PATHS"].get("git_dir", DEFAULT_GIT_INSTALL_DIR)
     os.makedirs(install_dir, exist_ok=True)
@@ -688,31 +735,31 @@ def install_git_repos():
     fail_count = 0
 
     for repo_name, repo_url in git_repos.items():
-        print(f"{Colors.CYAN}Cloning {repo_name}...{Colors.NC}")
+        logging.info(f"Cloning {repo_name}...")
         repo_path = os.path.join(install_dir, repo_name)
         if os.path.exists(repo_path):
             if not os.path.exists(os.path.join(repo_path, ".git")):
-                print(f"{Colors.YELLOW}Incomplete installation of {repo_name} found. Removing and reinstalling...{Colors.NC}")
+                logging.warning(f"Incomplete installation of {repo_name} found. Removing and reinstalling...")
                 shutil.rmtree(repo_path)
             else:
-                print(f"{Colors.GREEN}{repo_name} is already cloned.{Colors.NC}")
+                logging.info(f"{repo_name} is already cloned.")
                 success_count += 1
                 continue
         try:
 
             subprocess.run(["git", "clone", repo_url, repo_path], check=True, capture_output=True)
-            print(f"{Colors.GREEN}{repo_name} cloned successfully.{Colors.NC}")
+            logging.info(f"{repo_name} cloned successfully.")
             success_count += 1
         except subprocess.CalledProcessError as e:
             error_message = f"Error cloning {repo_name}: {e}\nStderr: {e.stderr.decode()}"
-            _log_error(error_message)
-            print(f"{Colors.RED}Error cloning {repo_name}: {e}{Colors.NC}")
-            print(f"{Colors.RED}Stderr: {e.stderr.decode()}{Colors.NC}")
+            logging.error(error_message)
+            logging.error(f"Error cloning {repo_name}: {e}")
+            logging.error(f"Stderr: {e.stderr.decode()}")
             fail_count += 1
 
-    print(f"\n{Colors.CYAN}--- Git repositories cloning summary ---{Colors.NC}")
-    print(f"{Colors.GREEN}Successfully cloned: {success_count}{Colors.NC}")
-    print(f"{Colors.RED}Failed to clone: {fail_count}{Colors.NC}\n")
+    logging.info(f"--- Git repositories cloning summary ---")
+    logging.info(f"Successfully cloned: {success_count}")
+    logging.error(f"Failed to clone: {fail_count}\n")
 
     return fail_count == 0
 
@@ -729,7 +776,7 @@ def get_install_path():
     return "/usr/local/bin"
 
 def install_system():
-    print(f"{Colors.CYAN}--- Installing huntools to the system ---{Colors.NC}")
+    logging.info(f"--- Installing huntools to the system ---")
     try:
         # Save the git repo path to the config
         git_repo_path = os.getcwd()
@@ -753,21 +800,21 @@ def install_system():
             command = f"sudo cp {huntools_path} {destination_path} && sudo chmod +x {destination_path}"
             process = subprocess.run(command, shell=True, check=False, capture_output=True)
             if process.returncode == 0:
-                print(f"{Colors.GREEN}huntools installed/updated successfully to {destination_path}.{Colors.NC}")
+                logging.info(f"huntools installed/updated successfully to {destination_path}.")
             else:
-                print(f"{Colors.RED}Error installing/updating huntools.{Colors.NC}")
+                logging.error(f"Error installing/updating huntools.")
                 if process.stderr:
-                    print(f"{Colors.RED}Stderr: {process.stderr.decode()}{Colors.NC}")
+                    logging.error(f"Stderr: {process.stderr.decode()}")
         else:
-            print(f"{Colors.GREEN}huntools is already up-to-date.{Colors.NC}")
+            logging.info(f"huntools is already up-to-date.")
 
     except Exception as e:
-        print(f"{Colors.RED}An unexpected error occurred: {e}{Colors.NC}")
+        logging.error(f"An unexpected error occurred: {e}")
 
 def install_all():
-    print(f"\n{Colors.GREEN}==========================================={Colors.NC}")
-    print(f"{Colors.GREEN}--- Starting Full Installation of Huntools ---{Colors.NC}")
-    print(f"{Colors.GREEN}==========================================={Colors.NC}\n")
+    logging.info(f"===========================================")
+    logging.info(f"--- Starting Full Installation of Huntools ---")
+    logging.info(f"===========================================\n")
 
     dependencies_status = False
     go_status = False
@@ -776,96 +823,96 @@ def install_all():
     python_tools_status = False
     git_repos_status = False
 
-    print(f"{Colors.CYAN}--- Step 1/6: Installing System Dependencies ---{Colors.NC}")
+    logging.info(f"--- Step 1/6: Installing System Dependencies ---")
     if install_dependencies():
         dependencies_status = True
-        print(f"{Colors.GREEN}--- Step 1/6: System Dependencies Installed ---{Colors.NC}\n")
+        logging.info(f"--- Step 1/6: System Dependencies Installed ---\n")
     else:
-        print(f"\n{Colors.RED}Installation aborted due to an error during dependency installation.{Colors.NC}")
-        print(f"{Colors.RED}--- Step 1/6: System Dependencies Installation Failed ---{Colors.NC}\n")
+        logging.error(f"Installation aborted due to an error during dependency installation.")
+        logging.error(f"--- Step 1/6: System Dependencies Installation Failed ---\n")
 
-    print(f"{Colors.CYAN}--- Step 2/6: Installing Go ---{Colors.NC}")
+    logging.info(f"--- Step 2/6: Installing Go ---")
     if install_go():
         go_status = True
-        print(f"{Colors.GREEN}--- Step 2/6: Go Installed ---{Colors.NC}\n")
+        logging.info(f"--- Step 2/6: Go Installed ---\n")
     else:
-        print(f"\n{Colors.RED}Installation aborted due to an error during Go installation.{Colors.NC}")
-        print(f"{Colors.RED}--- Step 2/6: Go Installation Failed ---{Colors.NC}\n")
+        logging.error(f"Installation aborted due to an error during Go installation.")
+        logging.error(f"--- Step 2/6: Go Installation Failed ---\n")
 
-    print(f"{Colors.CYAN}--- Step 3/6: Installing Go Tools ---{Colors.NC}")
+    logging.info(f"--- Step 3/6: Installing Go Tools ---")
     if install_go_tools():
         go_tools_status = True
-        print(f"{Colors.GREEN}--- Step 3/6: Go Tools Installation Attempted ---{Colors.NC}\n")
+        logging.info(f"--- Step 3/6: Go Tools Installation Attempted ---\n")
     else:
-        print(f"\n{Colors.YELLOW}Some Go tools failed to install. Continuing with the rest of the installation...{Colors.NC}")
-        print(f"{Colors.RED}--- Step 3/6: Go Tools Installation Failed ---{Colors.NC}\n")
+        logging.warning(f"Some Go tools failed to install. Continuing with the rest of the installation...")
+        logging.error(f"--- Step 3/6: Go Tools Installation Failed ---\n")
 
-    print(f"{Colors.CYAN}--- Step 4/6: Installing System Packages ---{Colors.NC}")
+    logging.info(f"--- Step 4/6: Installing System Packages ---")
     if install_packages():
         packages_status = True
-        print(f"{Colors.GREEN}--- Step 4/6: System Packages Installation Attempted ---{Colors.NC}\n")
+        logging.info(f"--- Step 4/6: System Packages Installation Attempted ---\n")
     else:
-        print(f"\n{Colors.YELLOW}Some packages failed to install. Continuing with the rest of the installation...{Colors.NC}")
-        print(f"{Colors.RED}--- Step 4/6: System Packages Installation Failed ---{Colors.NC}\n")
+        logging.warning(f"Some packages failed to install. Continuing with the rest of the installation...")
+        logging.error(f"--- Step 4/6: System Packages Installation Failed ---\n")
 
-    print(f"{Colors.CYAN}--- Step 5/6: Installing Python Tools ---{Colors.NC}")
+    logging.info(f"--- Step 5/6: Installing Python Tools ---")
     if install_python_tools():
         python_tools_status = True
-        print(f"{Colors.GREEN}--- Step 5/6: Python Tools Installation Attempted ---{Colors.NC}\n")
+        logging.info(f"--- Step 5/6: Python Tools Installation Attempted ---\n")
     else:
-        print(f"\n{Colors.YELLOW}Some Python tools failed to install. Continuing with the rest of the installation...{Colors.NC}")
-        print(f"{Colors.RED}--- Step 5/6: Python Tools Installation Failed ---{Colors.NC}\n")
+        logging.warning(f"Some Python tools failed to install. Continuing with the rest of the installation...")
+        logging.error(f"--- Step 5/6: Python Tools Installation Failed ---\n")
 
-    print(f"{Colors.CYAN}--- Step 6/6: Cloning Git Repositories ---{Colors.NC}")
+    logging.info(f"--- Step 6/6: Cloning Git Repositories ---")
     if install_git_repos():
         git_repos_status = True
-        print(f"{Colors.GREEN}--- Step 6/6: Git Repositories Cloning Attempted ---{Colors.NC}\n")
+        logging.info(f"--- Step 6/6: Git Repositories Cloning Attempted ---\n")
     else:
-        print(f"\n{Colors.YELLOW}Some Git repositories failed to clone. Continuing with the rest of the installation...{Colors.NC}")
-        print(f"{Colors.RED}--- Step 6/6: Git Repositories Cloning Failed ---{Colors.NC}\n")
+        logging.warning(f"Some Git repositories failed to clone. Continuing with the rest of the installation...")
+        logging.error(f"--- Step 6/6: Git Repositories Cloning Failed ---\n")
 
-    print(f"\n{Colors.GREEN}====================================={Colors.NC}")
-    print(f"{Colors.GREEN}--- Huntools installation complete! ---{Colors.NC}")
-    print(f"{Colors.GREEN}====================================={Colors.NC}")
+    logging.info(f"=====================================")
+    logging.info(f"--- Huntools installation complete! ---")
+    logging.info(f"=====================================")
 
     # Summary Log
     summary_log = []
-    summary_log.append(f"\n{Colors.CYAN}--- Installation Summary ---{Colors.NC}")
+    summary_log.append(f"\n--- Installation Summary ---")
     if dependencies_status:
-        summary_log.append(f"{Colors.GREEN}System Dependencies: SUCCESS{Colors.NC}")
+        summary_log.append(f"System Dependencies: SUCCESS")
     else:
-        summary_log.append(f"{Colors.RED}System Dependencies: FAILED (Manual intervention may be required){Colors.NC}")
+        summary_log.append(f"System Dependencies: FAILED (Manual intervention may be required)")
 
     if go_status:
-        summary_log.append(f"{Colors.GREEN}Go Installation: SUCCESS{Colors.NC}")
+        summary_log.append(f"Go Installation: SUCCESS")
     else:
-        summary_log.append(f"{Colors.RED}Go Installation: FAILED (Manual intervention may be required){Colors.NC}")
+        summary_log.append(f"Go Installation: FAILED (Manual intervention may be required)")
 
     if go_tools_status:
-        summary_log.append(f"{Colors.GREEN}Go Tools: SUCCESS{Colors.NC}")
+        summary_log.append(f"Go Tools: SUCCESS")
     else:
-        summary_log.append(f"{Colors.YELLOW}Go Tools: PARTIAL/FAILED (Check logs for details){Colors.NC}")
+        summary_log.append(f"Go Tools: PARTIAL/FAILED (Check logs for details)")
 
     if packages_status:
-        summary_log.append(f"{Colors.GREEN}System Packages: SUCCESS{Colors.NC}")
+        summary_log.append(f"System Packages: SUCCESS")
     else:
-        summary_log.append(f"{Colors.YELLOW}System Packages: PARTIAL/FAILED (Check logs for details){Colors.NC}")
+        summary_log.append(f"System Packages: PARTIAL/FAILED (Check logs for details)")
 
     if python_tools_status:
-        summary_log.append(f"{Colors.GREEN}Python Tools: SUCCESS{Colors.NC}")
+        summary_log.append(f"Python Tools: SUCCESS")
     else:
-        summary_log.append(f"{Colors.YELLOW}Python Tools: PARTIAL/FAILED (Check logs for details){Colors.NC}")
+        summary_log.append(f"Python Tools: PARTIAL/FAILED (Check logs for details)")
 
     if git_repos_status:
-        summary_log.append(f"{Colors.GREEN}Git Repositories: SUCCESS{Colors.NC}")
+        summary_log.append(f"Git Repositories: SUCCESS")
     else:
-        summary_log.append(f"{Colors.YELLOW}Git Repositories: PARTIAL/FAILED (Check logs for details){Colors.NC}")
+        summary_log.append(f"Git Repositories: PARTIAL/FAILED (Check logs for details)")
 
-    summary_log.append(f"{Colors.GREEN}====================================={Colors.NC}")
+    summary_log.append(f"=====================================")
 
     # Print summary to console
     for line in summary_log:
-        print(line)
+        logging.info(line)
 
     # Write summary to logs.txt
     with open("logs.txt", "w") as f:
@@ -874,21 +921,46 @@ def install_all():
         f.write("\n".join(clean_summary))
     
     # Also log the summary to errors.log for comprehensive error reporting
-    _log_error("\n".join(clean_summary))
+    logging.error("\n".join(clean_summary))
 
-    print(f"{Colors.GREEN}Installation summary written to logs.txt{Colors.NC}")
+    logging.info(f"Installation summary written to logs.txt")
 
 def install_single(tool_name):
     install_multiple(tool_name)
 
 def install_multiple(tools_str):
-    print(f"{Colors.CYAN}--- Installing multiple tools ---{Colors.NC}")
+    logging.info(f"--- Installing multiple tools ---")
+    
+    # Ensure system dependencies are installed first
+    if not install_dependencies():
+        logging.error(f"System dependency installation failed. Aborting tool installation.")
+        return
+
     tool_names = [tool.strip() for tool in tools_str.split(',')]
+
+    # Check if any Go tools are being installed and install Go if necessary
+    needs_go_installation = False
+    for tool_name in tool_names:
+        tool_name_lower = tool_name.lower()
+        if tool_name_lower in ALL_TOOLS_LOWER_MAP:
+            actual_tool_name = ALL_TOOLS_LOWER_MAP[tool_name_lower]
+            if ALL_TOOLS[actual_tool_name]["type"] == "go":
+                needs_go_installation = True
+                break
+    
+    if needs_go_installation:
+        if not install_go():
+            logging.error(f"Go installation failed. Aborting Go tool installation.")
+            # Filter out Go tools from the list if Go installation failed
+            tool_names = [name for name in tool_names if ALL_TOOLS.get(ALL_TOOLS_LOWER_MAP.get(name.lower()), {}).get("type") != "go"]
+            if not tool_names: # If only Go tools were requested and Go installation failed
+                return
+
 
     def _install_worker(tool_name):
         tool_name_lower = tool_name.lower()
         if tool_name_lower not in ALL_TOOLS_LOWER_MAP:
-            print(f"\n{Colors.RED}Error: Tool '{tool_name}' not found.{Colors.NC}")
+            logging.error(f"Error: Tool '{tool_name}' not found.")
             return
 
         actual_tool_name = ALL_TOOLS_LOWER_MAP[tool_name_lower]
@@ -916,7 +988,7 @@ def install_multiple(tools_str):
             repo_path = os.path.join(install_dir, actual_tool_name)
             subprocess.run(["git", "clone", repo_url, repo_path], check=True, capture_output=True)
         elif tool_type == "pip":
-            subprocess.run([sys.executable, "-m", "pip", "install", tool["install"]], check=True, capture_output=True)
+            subprocess.run([sys.executable, "-m", "pip", "install", "--break-system-packages", tool["install"]], check=True, capture_output=True)
         elif tool_type == "git":
             install_dir = config["PATHS"].get("git_dir", DEFAULT_GIT_INSTALL_DIR)
             repo_url = tool["url"]
@@ -927,28 +999,28 @@ def install_multiple(tools_str):
 
 
 def reinstall_single(tool_name, force=False):
-    print(f"{Colors.CYAN}--- Reinstalling {tool_name} ---{Colors.NC}")
+    logging.info(f"--- Reinstalling {tool_name} ---")
 
     tool_name_lower = tool_name.lower()
     if tool_name_lower not in ALL_TOOLS_LOWER_MAP:
-        print(f"\n{Colors.RED}Error: Tool '{tool_name}' not found.{Colors.NC}")
-        print(f"{Colors.YELLOW}run 'huntools display --all' to see the list of available tools.{Colors.NC}\n")
+        logging.error(f"Error: Tool '{tool_name}' not found.")
+        logging.warning(f"run 'huntools display --all' to see the list of available tools.\n")
         return
 
     actual_tool_name = ALL_TOOLS_LOWER_MAP[tool_name_lower]
     remove_single(actual_tool_name, force)
     install_single(actual_tool_name)
-    print(f"\n{Colors.GREEN}--- Reinstallation of {actual_tool_name} complete! ---{Colors.NC}")
+    logging.info(f"--- Reinstallation of {actual_tool_name} complete! ---")
 
 def display_all(output_format="text"):
     if output_format == "json":
         print(json.dumps(ALL_TOOLS, indent=4))
         return
 
-    print(f"{Colors.CYAN}Available tools:{Colors.NC}")
+    logging.info(f"Available tools:")
     all_tools = sorted(ALL_TOOLS.keys(), key=str.lower)
     if not all_tools:
-        print(f"{Colors.YELLOW}  No tools available.{Colors.NC}")
+        logging.warning(f"  No tools available.")
         return
 
     try:
@@ -980,7 +1052,7 @@ def display_all(output_format="text"):
         print((" " * min_column_spacing).join(row_output_parts))
 
 def checking_health():
-    print(f"{Colors.CYAN}Performing health check on all tools...{Colors.NC}")
+    logging.info(f"Performing health check on all tools...")
     all_tool_names = sorted(ALL_TOOLS.keys())
     installed_count = 0
     total_tools = len(all_tool_names)
@@ -993,43 +1065,43 @@ def checking_health():
         
         tool_path = shutil.which(tool_name) or shutil.which(tool_name.lower())
         if tool_path:
-            print(f"  - {tool_name}: {Colors.GREEN}Installed{Colors.NC} {Colors.YELLOW}(at {tool_path}){Colors.NC}")
+            logging.info(f"  - {tool_name}: Installed (at {tool_path})")
             is_installed = True
         
         elif tool_type == "python_git":
             repo_path = os.path.join(config["PATHS"].get("python_dir", DEFAULT_PYTHON_INSTALL_DIR), tool_name)
             if os.path.exists(repo_path):
-                print(f"  - {tool_name}: {Colors.GREEN}Installed (Python Git Repo){Colors.NC} {Colors.YELLOW}(at {repo_path}){Colors.NC}")
+                logging.info(f"  - {tool_name}: Installed (Python Git Repo) (at {repo_path})")
                 is_installed = True
         
         elif tool_type == "git":
             repo_path = os.path.join(config["PATHS"].get("git_dir", DEFAULT_GIT_INSTALL_DIR), tool_name)
             if os.path.exists(repo_path):
-                print(f"  - {tool_name}: {Colors.GREEN}Installed (Git Repo){Colors.NC} {Colors.YELLOW}(at {repo_path}){Colors.NC}")
+                logging.info(f"  - {tool_name}: Installed (Git Repo) (at {repo_path})")
                 is_installed = True
         elif tool_type == "go":
             go_bin_dir = config["PATHS"].get("go_bin_dir", DEFAULT_GO_BIN_DIR)
             huntools_go_bin_dir = os.path.join(os.environ["HOME"], ".huntools", "go")
             if os.path.exists(os.path.join(go_bin_dir, tool_name.lower())):
-                print(f"  - {tool_name}: {Colors.GREEN}Installed{Colors.NC} {Colors.YELLOW}(at {os.path.join(go_bin_dir, tool_name.lower())}){Colors.NC}")
+                logging.info(f"  - {tool_name}: Installed (at {os.path.join(go_bin_dir, tool_name.lower())})")
                 is_installed = True
             elif os.path.exists(os.path.join(huntools_go_bin_dir, tool_name.lower())):
-                print(f"  - {tool_name}: {Colors.GREEN}Installed{Colors.NC} {Colors.YELLOW}(at {os.path.join(huntools_go_bin_dir, tool_name.lower())}){Colors.NC}")
+                logging.info(f"  - {tool_name}: Installed (at {os.path.join(huntools_go_bin_dir, tool_name.lower())})")
                 is_installed = True
 
         if is_installed:
             installed_count += 1
         else:
-            print(f"  - {tool_name}: {Colors.RED}Not Found{Colors.NC}")
+            logging.error(f"  - {tool_name}: Not Found")
     
-    print(f"\n{Colors.CYAN}Summary: {installed_count}/{total_tools} tools installed.{Colors.NC}")
+    logging.info(f"Summary: {installed_count}/{total_tools} tools installed.")
 
 def update_single(tool_name):
-    print(f"{Colors.CYAN}Updating single tool: {tool_name}{Colors.NC}")
+    logging.info(f"Updating single tool: {tool_name}")
 
     if tool_name not in ALL_TOOLS:
-        print(f"\n{Colors.RED}Error: Tool '{tool_name}' not found.{Colors.NC}")
-        print(f"{Colors.YELLOW}run 'huntools display --all' to see the list of available tools.{Colors.NC}\n")
+        logging.error(f"Error: Tool '{tool_name}' not found.")
+        logging.warning(f"run 'huntools display --all' to see the list of available tools.\n")
         return
 
     tool = ALL_TOOLS[tool_name]
@@ -1046,14 +1118,14 @@ def update_single(tool_name):
         if os.path.exists(repo_path):
             subprocess.run(["git", "-C", repo_path, "pull"])
         else:
-            print(f"{Colors.YELLOW}Tool {tool_name} not found in {repo_path}. Cannot update.{Colors.NC}")
+            logging.warning(f"Tool {tool_name} not found in {repo_path}. Cannot update.")
 
     elif tool_type == "git":
         repo_path = os.path.join(os.environ["HOME"], ".huntools", "git", tool_name)
         if os.path.exists(repo_path):
             subprocess.run(["git", "-C", repo_path, "pull"])
         else:
-            print(f"{Colors.YELLOW}Tool {tool_name} not found in {repo_path}. Cannot update.{Colors.NC}")
+            logging.warning(f"Tool {tool_name} not found in {repo_path}. Cannot update.")
 
     elif tool_type == "package":
         package_manager = get_package_manager()
@@ -1062,17 +1134,17 @@ def update_single(tool_name):
         elif package_manager == "yum":
             subprocess.run(f"sudo {package_manager} update -y {tool_name}", shell=True)
         elif package_manager == "pacman":
-            print(f"{Colors.YELLOW}For Arch Linux, please run 'sudo pacman -Syu' to update all packages.{Colors.NC}")
+            logging.warning(f"For Arch Linux, please run 'sudo pacman -Syu' to update all packages.")
         elif package_manager == "brew":
             subprocess.run(f"brew upgrade {tool_name}", shell=True)
 def update_all():
-    print(f"{Colors.CYAN}--- Updating all tools ---{Colors.NC}")
+    logging.info(f"--- Updating all tools ---")
     
     package_manager = get_package_manager()
     package_tools = [name for name, tool in ALL_TOOLS.items() if tool["type"] == "package"]
 
     if package_manager and package_tools:
-        print(f"{Colors.GREEN}Updating system packages via {package_manager}...{Colors.NC}")
+        logging.info(f"Updating system packages via {package_manager}...")
         try:
             if package_manager == "apt-get":
                 update_command = f"sudo {package_manager} update -y"
@@ -1086,7 +1158,7 @@ def update_all():
                 subprocess.run(command, shell=True, check=True, capture_output=True)
 
             elif package_manager == "pacman":
-                 print(f"{Colors.YELLOW}For Arch Linux, all packages are updated together. Running full system upgrade...{Colors.NC}")
+                 logging.warning(f"For Arch Linux, all packages are updated together. Running full system upgrade...")
                  command = f"sudo {package_manager} -Syu --noconfirm"
                  subprocess.run(command, shell=True, check=True, capture_output=True)
 
@@ -1094,19 +1166,19 @@ def update_all():
                 command = f"brew upgrade {' '.join(package_tools)}"
                 subprocess.run(command, shell=True, check=True, capture_output=True)
 
-            print(f"{Colors.GREEN}System packages updated.{Colors.NC}\n")
+            logging.info(f"System packages updated.\n")
         except subprocess.CalledProcessError as e:
-            print(f"{Colors.RED}Error updating system packages: {e}{Colors.NC}")
-            print(f"{Colors.RED}Stderr: {e.stderr.decode()}{Colors.NC}")
-            print(f"{Colors.YELLOW}Continuing with other tool updates...{Colors.NC}\n")
+            logging.error(f"Error updating system packages: {e}")
+            logging.error(f"Stderr: {e.stderr.decode()}")
+            logging.warning(f"Continuing with other tool updates...\n")
     else:
-        print(f"{Colors.YELLOW}No system packages to update or package manager not supported.{Colors.NC}\n")
+        logging.warning(f"No system packages to update or package manager not supported.\n")
 
     for tool_name, tool_info in ALL_TOOLS.items():
         if tool_info["type"] == "package":
             continue 
 
-        print(f"{Colors.CYAN}Updating {tool_name}...{Colors.NC}")
+        logging.info(f"Updating {tool_name}...")
         tool_type = tool_info["type"]
         try:
             if tool_type == "go":
@@ -1118,24 +1190,24 @@ def update_all():
                 if os.path.exists(repo_path):
                     subprocess.run(["git", "-C", repo_path, "pull"], check=True, capture_output=True)
                 else:
-                    print(f"{Colors.YELLOW}Tool {tool_name} (python_git) not found at {repo_path}. Skipping update.{Colors.NC}")
+                    logging.warning(f"Tool {tool_name} (python_git) not found at {repo_path}. Skipping update.")
                     continue
             elif tool_type == "git":
                 repo_path = os.path.join(os.environ["HOME"], ".huntools", "git", tool_name)
                 if os.path.exists(repo_path):
                     subprocess.run(["git", "-C", repo_path, "pull"], check=True, capture_output=True)
                 else:
-                    print(f"{Colors.YELLOW}Tool {tool_name} (git) not found at {repo_path}. Skipping update.{Colors.NC}")
+                    logging.warning(f"Tool {tool_name} (git) not found at {repo_path}. Skipping update.")
                     continue
             
-            print(f"{Colors.GREEN}{tool_name} updated successfully.{Colors.NC}")
+            logging.info(f"{tool_name} updated successfully.")
         except subprocess.CalledProcessError as e:
-            print(f"{Colors.RED}Error updating {tool_name}: {e}{Colors.NC}")
-            print(f"{Colors.RED}Stderr: {e.stderr.decode()}{Colors.NC}")
+            logging.error(f"Error updating {tool_name}: {e}")
+            logging.error(f"Stderr: {e.stderr.decode()}")
         except Exception as e:
-            print(f"{Colors.RED}An unexpected error occurred while updating {tool_name}: {e}{Colors.NC}")
+            logging.error(f"An unexpected error occurred while updating {tool_name}: {e}")
     
-    print(f"\n{Colors.GREEN}--- All tools update process completed ---{Colors.NC}")
+    logging.info(f"--- All tools update process completed ---")
 
 def get_tool_location_and_command(tool_name, tool_info):
     tool_type = tool_info["type"]
@@ -1201,39 +1273,38 @@ def get_tool_location_and_command(tool_name, tool_info):
 
 
 def remove_single(tool_name, force=False):
-    print(f"{Colors.CYAN}Removing single tool: {tool_name}{Colors.NC}")
+    logging.info(f"Removing single tool: {tool_name}")
 
     tool_name_lower = tool_name.lower()
     if tool_name_lower not in ALL_TOOLS_LOWER_MAP:
-        print(f"\n{Colors.RED}Error: Tool '{tool_name}' not found.{Colors.NC}")
-        print(f"{Colors.YELLOW}run 'huntools display --all' to see the list of available tools.{Colors.NC}\n")
+        logging.error(f"Error: Tool '{tool_name}' not found.")
+        logging.warning(f"run 'huntools display --all' to see the list of available tools.\n")
         return
 
     actual_tool_name = ALL_TOOLS_LOWER_MAP[tool_name_lower]
     tool_info = ALL_TOOLS[actual_tool_name]
 
     if not _is_tool_installed(actual_tool_name, tool_info):
-        print(f"{Colors.YELLOW}Tool '{tool_name}' is not currently installed. Skipping removal.{Colors.NC}\n")
+        logging.warning(f"Tool '{tool_name}' is not currently installed. Skipping removal.\n")
         return
     
     tool_location, removal_command, needs_sudo = get_tool_location_and_command(actual_tool_name, tool_info)
 
     if not force:
         if tool_location == "Unknown" or (tool_info["type"] in ["python_git", "git"] and not os.path.exists(tool_location)):
-            print(f"{Colors.YELLOW}⚠️  Warning: Could not determine the exact installation path for {tool_name}. Proceeding with generic removal attempt.{Colors.NC}")
+            logging.warning(f"⚠️  Warning: Could not determine the exact installation path for {tool_name}. Proceeding with generic removal attempt.")
 
-        warning_message = f"{Colors.RED}⚠️  WARNING: You are about to remove {tool_name}.\n"
-        warning_message += f"📍 Location: {Colors.CYAN}{tool_location}{Colors.NC}{Colors.RED}"
+        logging.warning(f"⚠️  WARNING: You are about to remove {tool_name}.")
+        logging.warning(f"📍 Location: {tool_location}")
         if needs_sudo:
-            warning_message += f"\n{Colors.RED}🚨 This tool is in a system-protected directory and may require 'sudo'.{Colors.NC}"
-        print(warning_message)
+            logging.warning(f"🚨 This tool is in a system-protected directory and may require 'sudo'.")
 
         confirmation = input(f"{Colors.YELLOW}Are you sure you want to proceed? (yes/no): {Colors.NC}").lower()
         if confirmation != 'yes':
-            print(f"{Colors.BLUE}Removal of {tool_name} aborted.{Colors.NC}")
+            logging.info(f"Removal of {tool_name} aborted.")
             return
     else:
-        print(f"{Colors.GREEN}Force removal of {tool_name} initiated.{Colors.NC}")
+        logging.info(f"Force removal of {tool_name} initiated.")
 
     tool_type = tool_info["type"]
     try:
@@ -1244,48 +1315,48 @@ def remove_single(tool_name, force=False):
             if os.path.exists(go_tool_path):
                 try:
                     os.remove(go_tool_path)
-                    print(f"{Colors.GREEN}Removed {tool_name} from {go_tool_path}.{Colors.NC}")
+                    logging.info(f"Removed {tool_name} from {go_tool_path}.")
                 except OSError as e:
-                    print(f"{Colors.RED}Error removing {tool_name} from {go_tool_path}: {e}{Colors.NC}")
-                    print(f"{Colors.YELLOW}If this is a permission error, try running with 'sudo'.{Colors.NC}")
+                    logging.error(f"Error removing {tool_name} from {go_tool_path}: {e}")
+                    logging.warning(f"If this is a permission error, try running with 'sudo'.")
             else:
                 tool_path_from_which = shutil.which(tool_name.lower())
                 if tool_path_from_which:
                     try:
                         os.remove(tool_path_from_which)
-                        print(f"{Colors.GREEN}Removed {tool_name} from {tool_path_from_which}.{Colors.NC}")
+                        logging.info(f"Removed {tool_name} from {tool_path_from_which}.")
                     except OSError as e:
-                        print(f"{Colors.RED}Error removing {tool_name} from {tool_path_from_which}: {e}{Colors.NC}")
-                        print(f"{Colors.YELLOW}If this is a permission error, try running with 'sudo'.{Colors.NC}")
+                        logging.error(f"Error removing {tool_name} from {tool_path_from_which}: {e}")
+                        logging.warning(f"If this is a permission error, try running with 'sudo'.")
                 else:
-                    print(f"{Colors.RED}Error: {tool_name} not found in configured Go binary directory ({go_bin_dir}) or system PATH for removal.{Colors.NC}")
+                    logging.error(f"Error: {tool_name} not found in configured Go binary directory ({go_bin_dir}) or system PATH for removal.")
 
         elif tool_type == "pip":
             subprocess.run(removal_command, check=True)
-            print(f"{Colors.GREEN}Removed {tool_name} via pip.{Colors.NC}")
+            logging.info(f"Removed {tool_name} via pip.")
 
         elif tool_type == "python_git" or tool_type == "git":
             if os.path.exists(tool_location): 
                 shutil.rmtree(tool_location)
-                print(f"{Colors.GREEN}Removed {tool_name} repository from {tool_location}.{Colors.NC}")
+                logging.info(f"Removed {tool_name} repository from {tool_location}.")
             else:
-                print(f"{Colors.RED}Error: Repository for {tool_name} not found at {tool_location} for removal.{Colors.NC}")
+                logging.error(f"Error: Repository for {tool_name} not found at {tool_location} for removal.")
 
         elif tool_type == "package":
             if removal_command:
                 subprocess.run(removal_command, check=True)
-                print(f"{Colors.GREEN}Removed {tool_name} via package manager.{Colors.NC}")
+                logging.info(f"Removed {tool_name} via package manager.")
             else:
-                print(f"{Colors.RED}Error: Could not find package manager removal command for {tool_name}.{Colors.NC}")
+                logging.error(f"Error: Could not find package manager removal command for {tool_name}.")
 
     except subprocess.CalledProcessError as e:
-        print(f"{Colors.RED}Error removing {tool_name}: {e}{Colors.NC}")
+        logging.error(f"Error removing {tool_name}: {e}")
         if e.stderr:
-            print(f"{Colors.RED}Stderr: {e.stderr.decode()}{Colors.NC}")
-        print(f"{Colors.YELLOW}If this is a permission error, try running with 'sudo'.{Colors.NC}")
+            logging.error(f"Stderr: {e.stderr.decode()}")
+        logging.warning(f"If this is a permission error, try running with 'sudo'.")
     except OSError as e:
-        print(f"{Colors.RED}Error removing {tool_name}: {e}{Colors.NC}")
-        print(f"{Colors.YELLOW}If this is a permission error, try running with 'sudo'.{Colors.NC}")
+        logging.error(f"Error removing {tool_name}: {e}")
+        logging.warning(f"If this is a permission error, try running with 'sudo'.")
 
         
 def get_installed_tools_count():
@@ -1315,42 +1386,40 @@ def get_installed_tools_count():
 
 def remove_all(force=False):
     installed_tool_count = get_installed_tools_count()
-    warning_message = f"{Colors.RED}⚠️  WARNING: You are about to remove {installed_tool_count} currently installed huntools. This action is irreversible.{Colors.NC}"
-    print(warning_message)
+    logging.warning(f"⚠️  WARNING: You are about to remove {installed_tool_count} currently installed huntools. This action is irreversible.")
     if not force:
         confirmation = input(f"{Colors.YELLOW}Are you sure you want to proceed? (yes/no): {Colors.NC}").lower()
         if confirmation != 'yes':
-            print(f"{Colors.BLUE}Removal aborted.{Colors.NC}")
+            logging.info(f"Removal aborted.")
             return
 
-    print(f"{Colors.BLUE}--- Removing all installed tools ---{Colors.NC}")
+    logging.info(f"--- Removing all installed tools ---")
     
     for tool_name in list(ALL_TOOLS.keys()): 
         remove_single(tool_name)
 
     huntools_dir = config["PATHS"].get("install_dir", DEFAULT_HUNTOOLS_INSTALL_DIR)
     if os.path.exists(huntools_dir):
-        print(f"{Colors.BLUE}Removing huntools installation directory: {huntools_dir}{Colors.NC}")
+        logging.info(f"Removing huntools installation directory: {huntools_dir}")
         try:
             shutil.rmtree(huntools_dir)
-            print(f"{Colors.GREEN}Removed {huntools_dir}.{Colors.NC}")
+            logging.info(f"Removed {huntools_dir}.")
         except OSError as e:
-            print(f"{Colors.RED}Error removing {huntools_dir}: {e}{Colors.NC}")
-            print(f"{Colors.YELLOW}If this is a permission error, try running with 'sudo'.{Colors.NC}")
+            logging.error(f"Error removing {huntools_dir}: {e}")
+            logging.warning(f"If this is a permission error, try running with 'sudo'.")
 
-    print(f"\n{Colors.GREEN}--- All tools removal process completed ---{Colors.NC}")
-    print(f"{Colors.YELLOW}Note: Some system packages might require manual removal if not fully uninstalled by individual tool removal.{Colors.NC}")
+    logging.info(f"--- All tools removal process completed ---")
+    logging.warning(f"Note: Some system packages might require manual removal if not fully uninstalled by individual tool removal.")
 
 def clean_all(force=False):
-    warning_message = f"{Colors.RED}⚠️  WARNING: You are about to purge delete all data, including configuration. This action is irreversible.{Colors.NC}"
-    print(warning_message)
+    logging.warning(f"⚠️  WARNING: You are about to purge delete all data, including configuration. This action is irreversible.")
     if not force:
         confirmation = input(f"{Colors.YELLOW}Are you sure you want to proceed? (yes/no): {Colors.NC}").lower()
         if confirmation != 'yes':
-            print(f"{Colors.CYAN}Purge aborted.{Colors.NC}")
+            logging.info(f"Purge aborted.")
             return
 
-    print(f"{Colors.CYAN}Purging all huntools data...{Colors.NC}")
+    logging.info(f"Purging all huntools data...")
     remove_all()
     config_dir_to_remove = config["PATHS"].get("config_file", CONFIG_DIR)
     if os.path.exists(config_dir_to_remove):
@@ -1358,78 +1427,78 @@ def clean_all(force=False):
     
     huntools_system_path = "/usr/local/bin/huntools"
     if os.path.exists(huntools_system_path):
-        print(f"{Colors.CYAN}Removing system-wide huntools executable...{Colors.NC}")
+        logging.info(f"Removing system-wide huntools executable...")
         try:
             command = f"sudo rm {huntools_system_path}"
-            print(f"Running command: {command}")
+            logging.info(f"Running command: {command}")
             process = subprocess.run(command, shell=True, check=False, capture_output=True)
             if process.returncode == 0:
-                print(f"{Colors.GREEN}Removed {huntools_system_path}.{Colors.NC}")
+                logging.info(f"Removed {huntools_system_path}.")
             else:
-                print(f"{Colors.RED}Error removing {huntools_system_path}.{Colors.NC}")
+                logging.error(f"Error removing {huntools_system_path}.")
                 if process.stderr:
-                    print(f"{Colors.RED}Stderr: {process.stderr.decode()}{Colors.NC}")
-                print(f"{Colors.YELLOW}You may need to remove it manually: sudo rm {huntools_system_path}{Colors.NC}")
+                    logging.error(f"Stderr: {process.stderr.decode()}")
+                logging.warning(f"You may need to remove it manually: sudo rm {huntools_system_path}")
         except Exception as e:
-            print(f"{Colors.RED}An unexpected error occurred: {e}{Colors.NC}")
+            logging.error(f"An unexpected error occurred: {e}")
 
-    print(f"{Colors.GREEN}All huntools data has been removed.{Colors.NC}")
+    logging.info(f"All huntools data has been removed.")
 
 def self_update():
-    print(f"{Colors.CYAN}Updating huntools...{Colors.NC}")
+    logging.info(f"Updating huntools...")
     
     git_repo_path = config.get("PATHS", {}).get("git_repo_path")
     if not git_repo_path or not os.path.exists(os.path.join(git_repo_path, ".git")):
-        print(f"{Colors.RED}Huntools git repository path not found or invalid.{Colors.NC}")
-        print(f"{Colors.YELLOW}Please run the system-wide installation again from within the git repository to set the path:{Colors.NC}")
-        print(f"  ./huntools.py install -is")
+        logging.error(f"Huntools git repository path not found or invalid.")
+        logging.warning(f"Please run the system-wide installation again from within the git repository to set the path:")
+        logging.warning(f"  ./huntools.py install -is")
         return
 
     try:
-        print(f"{Colors.CYAN}Pulling latest changes from git...{Colors.NC}")
+        logging.info(f"Pulling latest changes from git...")
         subprocess.run(["git", "-C", git_repo_path, "pull"], check=True)
-        print(f"{Colors.GREEN}huntools updated successfully from git.{Colors.NC}")
+        logging.info(f"huntools updated successfully from git.")
 
         install_dir = get_install_path()
         destination_path = os.path.join(install_dir, "huntools")
 
         if os.path.exists(destination_path):
-            print(f"{Colors.CYAN}System-wide installation detected. Updating executable...{Colors.NC}")
+            logging.info(f"System-wide installation detected. Updating executable...")
             try:
                 huntools_local_path = os.path.join(git_repo_path, "huntools.py")
                 command = f"sudo cp {huntools_local_path} {destination_path} && sudo chmod +x {destination_path}"
                 
-                print(f"Running command: {Colors.GREEN}{command}{Colors.NC}")
+                logging.info(f"Running command: {command}")
                 
                 process = subprocess.run(command, shell=True, check=False, capture_output=True)
                 
                 if process.returncode == 0:
-                    print(f"{Colors.GREEN}System-wide executable updated successfully to {destination_path}.{Colors.NC}")
+                    logging.info(f"System-wide executable updated successfully to {destination_path}.")
                 else:
-                    print(f"{Colors.RED}Error updating system-wide executable.{Colors.NC}")
+                    logging.error(f"Error updating system-wide executable.")
                     if process.stderr:
-                        print(f"{Colors.RED}Stderr: {process.stderr.decode()}{Colors.NC}")
-                    print(f"{Colors.YELLOW}You may need to run 'sudo ./huntools.py install -is' again manually.{Colors.NC}")
+                        logging.error(f"Stderr: {process.stderr.decode()}")
+                    logging.warning(f"You may need to run 'sudo ./huntools.py install -is' again manually.")
             
             except Exception as e:
-                print(f"{Colors.RED}An unexpected error occurred while updating the system-wide executable: {e}{Colors.NC}")
+                logging.error(f"An unexpected error occurred while updating the system-wide executable: {e}")
 
     except subprocess.CalledProcessError:
-        print(f"{Colors.RED}Update failed. Please make sure you are in the huntools git repository.{Colors.NC}")
+        logging.error(f"Update failed. Please make sure you are in the huntools git repository.")
 
 def show_path():
-    print(f"{Colors.NC}Displaying huntools paths:{Colors.NC}")
+    logging.info(f"Displaying huntools paths:")
     install_dir = config["PATHS"].get("install_dir", DEFAULT_HUNTOOLS_INSTALL_DIR)
     python_dir = config["PATHS"].get("python_dir", DEFAULT_PYTHON_INSTALL_DIR)
     git_dir = config["PATHS"].get("git_dir", DEFAULT_GIT_INSTALL_DIR)
     go_bin_dir = config["PATHS"].get("go_bin_dir", DEFAULT_GO_BIN_DIR)
     config_file_path = config["PATHS"].get("config_file", os.path.join(CONFIG_DIR, "config.yml"))
 
-    print(f"{Colors.NC}  - Installation directory: {Colors.GREEN}{install_dir}{Colors.NC}")
-    print(f"{Colors.NC}  - Python tools directory: {Colors.GREEN}{python_dir}{Colors.NC}")
-    print(f"{Colors.NC}  - Git repos directory: {Colors.GREEN}{git_dir}{Colors.NC}")
-    print(f"{Colors.NC}  - Go binary path: {Colors.GREEN}{go_bin_dir}{Colors.NC}")
-    print(f"{Colors.NC}  - Config file: {Colors.GREEN}{config_file_path}{Colors.NC}")
+    logging.info(f"  - Installation directory: {install_dir}")
+    logging.info(f"  - Python tools directory: {python_dir}")
+    logging.info(f"  - Git repos directory: {git_dir}")
+    logging.info(f"  - Go binary path: {go_bin_dir}")
+    logging.info(f"  - Config file: {config_file_path}")
 
 def show_changelog():
     url = "https://raw.githubusercontent.com/l0n3m4n/huntools/refs/heads/main/CHANGELOG.md"
@@ -1464,7 +1533,7 @@ def show_changelog():
                 print(f"{Colors.NC}{formatted_line}{Colors.NC}")
 
     except Exception as e:
-        print(f"{Colors.RED}Failed to fetch changelog from URL: {e}{Colors.NC}")
+        logging.error(f"Failed to fetch changelog from URL: {e}")
 
 def generate_dockerfile(filename=None):
     dockerfile_content = '''# Use an official Python runtime as a parent image
@@ -1523,9 +1592,9 @@ CMD ["bash"]
         try:
             with open(filename, "w") as f:
                 f.write(dockerfile_content)
-            print(f"{Colors.NC}Dockerfile successfully generated: {Colors.GREEN}{os.path.abspath(filename)}{Colors.NC}")
+            logging.info(f"Dockerfile successfully generated: {os.path.abspath(filename)}")
         except IOError as e:
-            print(f"{Colors.RED}Error writing Dockerfile to {filename}: {e}{Colors.NC}")
+            logging.error(f"Error writing Dockerfile to {filename}: {e}")
     else:
         print(f"{Colors.BLUE}{dockerfile_content}{Colors.NC}")
 
@@ -1592,6 +1661,8 @@ def main():
             formatter_class=CustomHelpFormatter,
             usage="huntools <command> [flags]"
         )
+        parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output.")
+        parser.add_argument("-d", "--debug", action="store_true", help="Enable debug output.")
 
         subparsers = parser.add_subparsers(dest="command", title="Available commands", metavar=" ")
 
@@ -1686,13 +1757,15 @@ def main():
 
         args = parser.parse_args()
 
+        setup_logging(args.verbose, args.debug)
+
         if not args.command:
             parser.print_help()
             sys.exit(1)
 
         # Manual validation for --format option
         if hasattr(args, 'output_format') and args.output_format not in ["text", "json"]:
-            print(f"{Colors.RED}Error: Invalid output format '{args.output_format}'. Choose from 'text' or 'json'.{Colors.NC}")
+            logging.error(f"Error: Invalid output format '{args.output_format}'. Choose from 'text' or 'json'.")
             sys.exit(1)
 
         if args.command == "install":
@@ -1753,15 +1826,15 @@ def main():
             if args.config_path or args.binary_path or args.install_path:
                 if args.config_path:
                     config["PATHS"]["config_file"] = args.config_path
-                    print(f"{Colors.GREEN}Setting custom config file path to: {args.config_path}{Colors.NC}")
+                    logging.info(f"Setting custom config file path to: {args.config_path}")
                 if args.binary_path:
                     config["PATHS"]["go_bin_dir"] = args.binary_path
-                    print(f"{Colors.GREEN}Setting custom Go binary path to: {args.binary_path}{Colors.NC}")
+                    logging.info(f"Setting custom Go binary path to: {args.binary_path}")
                 if args.install_path:
                     config["PATHS"]["install_dir"] = args.install_path
                     config["PATHS"]["python_dir"] = os.path.join(args.install_path, "python")
                     config["PATHS"]["git_dir"] = os.path.join(args.install_path, "git")
-                    print(f"{Colors.GREEN}Setting custom install path to: {args.install_path}{Colors.NC}")
+                    logging.info(f"Setting custom install path to: {args.install_path}")
                 save_config()
             else:
                 config_parser.print_help()
@@ -1777,7 +1850,7 @@ def main():
                 sys.exit(1)
 
     except KeyboardInterrupt:
-        print(f"\n\n{Colors.RED}Installation aborted by user (Ctrl+C).{Colors.NC}")
+        logging.error(f"Installation aborted by user (Ctrl+C).")
         sys.exit(1)
 
 if __name__ == "__main__":
