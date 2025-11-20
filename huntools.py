@@ -381,13 +381,15 @@ def get_package_manager():
 def install_dependencies():
     # Check if system dependencies are already installed (heuristic)
     # We check for git, python3, pip3, and a common build tool (gcc)
-    # and poetry. If all are found, we assume system dependencies are met.
     all_present = True
+    logging.debug(f"Checking for git: {shutil.which('git')}")
     if not shutil.which("git"): all_present = False
+    logging.debug(f"Checking for python3: {shutil.which('python3')}")
     if not shutil.which("python3"): all_present = False
+    logging.debug(f"Checking for pip3: {shutil.which('pip3')}")
     if not shutil.which("pip3"): all_present = False
+    logging.debug(f"Checking for gcc: {shutil.which('gcc')}")
     if not shutil.which("gcc"): all_present = False
-    if not shutil.which("poetry"): all_present = False
 
     if all_present:
         return True, True # Success, already installed
@@ -435,21 +437,6 @@ def install_dependencies():
         
         logging.info(f"System dependencies installed successfully.\n")
 
-        # Install Poetry if not already present
-        if not shutil.which("poetry"):
-            logging.info(f"--- Installing Poetry ---")
-            try:
-                subprocess.run("curl -sSL https://install.python-poetry.org | python3 -", shell=True, check=True, capture_output=True)
-                logging.info(f"Poetry installed successfully.\n")
-            except subprocess.CalledProcessError as e:
-                error_message = f"Error installing Poetry: {e}\nStderr: {e.stderr.decode()}"
-                logging.error(error_message)
-                logging.error(f"Error installing Poetry: {e}")
-                logging.error(f"Stderr: {e.stderr.decode()}")
-                return False, False
-        else:
-            logging.info(f"Poetry is already installed.\n")
-
         return True, False # Success, installed now
     except subprocess.CalledProcessError as e:
         error_message = f"Error installing dependencies: {e}\nStderr: {e.stderr.decode()}"
@@ -488,10 +475,33 @@ def _add_go_env_to_shell_config(shell_config_path, goroot, gopath):
         logging.warning(f"Go environment variables already present in {shell_config_path}. No changes made.")
         return False
 
+def install_poetry():
+    if shutil.which("poetry"):
+        logging.info(f"Poetry is already installed.\n")
+        return True, True # Success, already installed
+    
+    logging.info(f"--- Installing Poetry ---")
+    try:
+        subprocess.run("curl -sSL https://install.python-poetry.org | python3 -", shell=True, check=True, capture_output=True)
+        logging.info(f"Poetry installed successfully.\n")
+        # Add Poetry's bin directory to the current process's PATH
+        poetry_bin_path = os.path.join(os.environ["HOME"], ".poetry", "bin")
+        if os.path.exists(poetry_bin_path) and poetry_bin_path not in os.environ["PATH"]:
+            os.environ["PATH"] = f"{poetry_bin_path}:{os.environ['PATH']}"
+            logging.debug(f"Added {poetry_bin_path} to PATH for current process.")
+        return True, False # Success, installed now
+    except subprocess.CalledProcessError as e:
+        error_message = f"Error installing Poetry: {e}\nStderr: {e.stderr.decode()}"
+        logging.error(error_message)
+        logging.error(f"Error installing Poetry: {e}")
+        logging.error(f"Stderr: {e.stderr.decode()}")
+        return False, False
+
+
 def install_go():
     if shutil.which("go"):
         logging.info(f"Go is already installed.\n")
-        return True
+        return True, True # Success, already installed
 
     logging.info(f"Installing Go...")
     try:
@@ -591,7 +601,7 @@ def install_go():
         logging.debug(f"PATH updated to: {os.environ['PATH']}")
 
         logging.warning(f"Please restart your shell or run 'source ~/.bashrc' to apply the changes.\n")
-        return True
+        return True, False # Success, installed now
         
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
         error_message = f"Error installing Go: {e}"
@@ -601,7 +611,7 @@ def install_go():
         logging.error(f"Error installing Go: {e}")
         if isinstance(e, subprocess.CalledProcessError):
             logging.error(f"Stderr: {e.stderr.decode()}")
-        return False
+        return False, False
 
 def _install_tool_worker(tool, tool_info, install_function):
     """Worker function to install a single tool."""
@@ -850,23 +860,30 @@ def install_all():
     if deps_success:
         dependencies_status = True
         if deps_already_installed:
-            logging.info(f"--- Step 1/6: System Dependencies Already Installed ---\n")
+            logging.info(f"--- Step 1/7: System Dependencies Already Installed ---\n")
         else:
-            logging.info(f"--- Step 1/6: Installing System Dependencies ---\n")
+            logging.info(f"--- Step 1/7: Installing System Dependencies ---\n")
     else:
         logging.error(f"Installation aborted due to an error during dependency installation.")
-        logging.error(f"--- Step 1/6: System Dependencies Installation Failed ---\n")
+        logging.error(f"--- Step 1/7: System Dependencies Installation Failed ---\n")
+
+    poetry_success, poetry_already_installed = install_poetry()
+    if poetry_success:
+        logging.info(f"--- Step 2/7: Poetry {'Already Installed' if poetry_already_installed else 'Installed'} ---\n")
+    else:
+        logging.error(f"Installation aborted due to an error during Poetry installation.")
+        logging.error(f"--- Step 2/7: Poetry Installation Failed ---\n")
 
     go_success, go_already_installed = install_go()
     if go_success:
         go_status = True
         if go_already_installed:
-            logging.info(f"--- Step 2/6: Go Already Installed ---\n")
+            logging.info(f"--- Step 3/7: Go Already Installed ---\n")
         else:
-            logging.info(f"--- Step 2/6: Installing Go ---\n")
+            logging.info(f"--- Step 3/7: Installing Go ---\n")
     else:
         logging.error(f"Installation aborted due to an error during Go installation.")
-        logging.error(f"--- Step 2/6: Go Installation Failed ---\n")
+        logging.error(f"--- Step 3/7: Go Installation Failed ---\n")
 
     logging.info(f"--- Step 3/6: Installing Go Tools ---")
     if install_go_tools():
@@ -967,6 +984,14 @@ def install_multiple(tools_str):
         return
     if not deps_already_installed:
         logging.info(f"--- 🔧 Installing system dependencies ---")
+
+    # Ensure Poetry is installed
+    poetry_success, poetry_already_installed = install_poetry()
+    if not poetry_success:
+        logging.error(f"Poetry installation failed. Aborting tool installation.")
+        return
+    if not poetry_already_installed:
+        logging.info(f"--- Installing Poetry ---")
 
     tool_names = [tool.strip() for tool in tools_str.split(',')]
 
