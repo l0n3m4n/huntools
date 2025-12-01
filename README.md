@@ -50,6 +50,7 @@ Huntools is a Python-based command-line utility designed for penetration testers
 
 ## 💡 Usage and Installation: 
 > requirements
+- Linux Distros `Debian, Ubuntu, Fedora, Mac, Termux`
 - `python3 latest` 
 - `sudo apt instll pip -y && pip3 install PyYaml`
 ### 🚀 Initial Setup & Installation
