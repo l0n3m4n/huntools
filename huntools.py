@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
 
+#######################################################################
+# HUNTOOLS - HUNTER TOOLS MANAGER                                     #
+# Author: l0n3m4n                                                     #
+# Version: 3.5.0                                                      #                                                            
+# Description: A comprehensive tool manager for security researchers. #
+#######################################################################
+
+
+
 import os
 import sys
 import re
@@ -18,10 +27,8 @@ import logging
 
 
 class Colors:
-    # Reset
     NC = '\033[0m' 
 
-    # Text Styles
     BOLD = '\033[1m'
     ITALIC = '\033[3m'
     UNDERLINE = '\033[4m'
@@ -29,7 +36,6 @@ class Colors:
     INVERSE = '\033[7m' 
     STRIKETHROUGH = '\033[9m'
 
-    # Foreground Colors
     BLACK = '\033[0;30m'
     RED = '\033[0;31m'
     GREEN = '\033[0;32m'
@@ -39,7 +45,6 @@ class Colors:
     CYAN = '\033[0;36m'
     WHITE = '\033[0;37m'
 
-    # Bright Foreground Colors
     BRIGHT_BLACK = '\033[0;90m'
     BRIGHT_RED = '\033[0;91m'
     BRIGHT_GREEN = '\033[0;92m'
@@ -49,7 +54,6 @@ class Colors:
     BRIGHT_CYAN = '\033[0;96m'
     BRIGHT_WHITE = '\033[0;97m'
 
-    # Bold Foreground Colors (expanding)
     BOLD_BLACK = '\033[1;30m'
     BOLD_RED = '\033[1;31m'
     BOLD_GREEN = '\033[1;32m'
@@ -59,7 +63,6 @@ class Colors:
     BOLD_CYAN = '\033[1;36m'
     BOLD_WHITE = '\033[1;37m'
 
-    # Background Colors
     BG_BLACK = '\033[40m'
     BG_RED = '\033[41m'
     BG_GREEN = '\033[42m'
@@ -69,7 +72,6 @@ class Colors:
     BG_CYAN = '\033[46m'
     BG_WHITE = '\033[47m'
 
-    # Bright Background Colors
     BG_BRIGHT_BLACK = '\033[100m'
     BG_BRIGHT_RED = '\033[101m'
     BG_BRIGHT_GREEN = '\033[102m'
@@ -84,30 +86,22 @@ class ColoredFormatter(logging.Formatter):
     FORMAT = "[%(levelname)s] %(message)s"
 
     LOG_COLORS = {
-        logging.DEBUG: Colors.BRIGHT_CYAN, # Dark gray for debug
-        logging.INFO: Colors.BOLD_GREEN,  # Bright green for info/success
-        logging.WARNING: Colors.BRIGHT_YELLOW, # Bright yellow for warnings
-        logging.ERROR: Colors.BOLD_RED,     # Bold red for errors
-        logging.CRITICAL: Colors.BOLD_RED + Colors.BOLD # Bold red and bold for critical
+        logging.DEBUG: Colors.BRIGHT_CYAN, 
+        logging.INFO: Colors.BOLD_GREEN,  
+        logging.WARNING: Colors.BRIGHT_YELLOW, 
+        logging.ERROR: Colors.BOLD_RED,     
+        logging.CRITICAL: Colors.BOLD_RED + Colors.BOLD 
     }
 
     def format(self, record):
         log_fmt = self.LOG_COLORS.get(record.levelno, Colors.NC) + self.FORMAT + Colors.NC
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
-
-
-# The _log_error function is replaced by logging.error
-# def _log_error(message):
-#     clean_message = re.sub(r'\x1b\[([0-9]{1,2};)?([0-9]{1,2})?m', '', message)
-#     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-#     with open("errors.log", "a") as f:
-#         f.write(f"[{timestamp}] {clean_message}\n")
+    
 
 def setup_logging(verbose, debug):
     logger = logging.getLogger()
 
-    # Clear existing handlers to prevent duplicate output
     if logger.hasHandlers():
         logger.handlers.clear()
 
@@ -118,24 +112,20 @@ def setup_logging(verbose, debug):
     if debug:
         logger.setLevel(logging.DEBUG)
 
-    # Console handler with colored output
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(ColoredFormatter())
     logger.addHandler(console_handler)
 
-    # File handler for all logs
     file_handler = logging.FileHandler("huntools.log")
     file_handler.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s"))
-    file_handler.setLevel(logging.DEBUG) # Capture all levels to file
+    file_handler.setLevel(logging.DEBUG) 
     logger.addHandler(file_handler)
 
-    # Separate file handler for errors.log (only ERROR and CRITICAL)
     error_file_handler = logging.FileHandler("errors.log")
     error_file_handler.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s"))
     error_file_handler.setLevel(logging.ERROR)
     logger.addHandler(error_file_handler)
 
-    # Disable propagation to avoid duplicate messages from root logger
     logger.propagate = False
 
 
@@ -157,17 +147,13 @@ def show_banner():
     print(f"{Colors.BRIGHT_CYAN}{banner}{Colors.NC}{info_line}", end="")
     
 
-
-
-# Master Tool List: You can add more tools here as needed, and you can delete tools you don't want to install
 ALL_TOOLS = {
-    
-    # Go Tools
+    # go tools
     "ffuf": {"type": "go", "install": "go install -v github.com/ffuf/ffuf/v2@latest"},
     "katana": {"type": "go", "install": "go install -v github.com/projectdiscovery/katana/cmd/katana@latest"},
     "subfinder": {"type": "go", "install": "go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest"},
     "assetfinder": {"type": "go", "install": "go install -v github.com/tomnomnom/assetfinder@latest"},
-    #"aquatone": {"type": "go", "install": "go install -v github.com/michenriksen/aquatone@latest"},
+    "aquatone": {"type": "go", "install": "go install -v github.com/michenriksen/aquatone@latest"},
     "gau": {"type": "go", "install": "go install -v github.com/lc/gau/v2/cmd/gau@latest"},
     "waybackurls": {"type": "go", "install": "go install -v github.com/tomnomnom/waybackurls@latest"},
     "Amass": {"type": "go", "install": "go install -v github.com/owasp-amass/amass/v4/cmd/amass@latest"},
@@ -228,12 +214,12 @@ ALL_TOOLS = {
     "qsreplace": {"type": "go", "install": "go install -v github.com/tomnomnom/qsreplace@latest"}, 
     "vulnx": {"type": "go", "install": "go install -v github.com/projectdiscovery/cvemap/cmd/vulnx@latest"},
 
-    # Package Tools
-    "jq": {"type": "package"}, # command-line JSON processor
-    "flameshot": {"type": "package"}, # screenshot tool
-    "lsd": {"type": "package"}, # debian package name is 'lsd', for arch is 'lsd-git' 
+    # system packages
+    "jq": {"type": "package"}, 
+    "flameshot": {"type": "package"}, 
+    "lsd": {"type": "package"},  
 
-    # Python Git Tools
+    # python git repos
     "SSRFmap": {"type": "python_git", "url": "https://github.com/swisskyrepo/SSRFmap.git"},
     "LinkFinder": {"type": "python_git", "url": "https://github.com/GerbenJavado/LinkFinder.git"},
     "OneForAll": {"type": "python_git", "url": "https://github.com/shmilylty/OneForAll.git"},
@@ -257,9 +243,9 @@ ALL_TOOLS = {
     "metagoofil": {"type": "python_git", "url": "https://github.com/opsdisk/metagoofil.git"},
     "dnsvalidator": {"type": "python_git", "url": "https://github.com/vortexau/dnsvalidator.git"},
     "ghauri": {"type": "python_git", "url": "https://github.com/r0oth3x49/ghauri.git"},
-    "seclists": {"type": "python_git", "url": "https://github.com/danielmiessler/SecLists.git", "size": "large"}, # NOTE: manual intallation due to package size (2.6gb)
+    "seclists": {"type": "python_git", "url": "https://github.com/danielmiessler/SecLists.git", "size": "large"},  
     "xsser" : {"type": "python_git", "url": "https://github.com/epsylon/xsser.git"}, 
-    
+   
     # Python Pip Tools
     "censys": {"type": "python_git", "url": "https://github.com/censys/censys-python.git"},
     "shodan": {"type": "python_git", "url": "https://github.com/achillean/shodan-python.git"},
@@ -284,9 +270,6 @@ ALL_TOOLS = {
 
 
 ALL_TOOLS_LOWER_MAP = {name.lower(): name for name in ALL_TOOLS.keys()}
-
-
-# Global Variables 
 CONFIG_DIR = os.path.join(os.environ["HOME"], ".config", "huntools")
 
 DEFAULT_HUNTOOLS_INSTALL_DIR = os.path.join(os.environ["HOME"], ".huntools")
@@ -306,7 +289,7 @@ def _get_actual_config_file_path():
                 if 'PATHS' in temp_config and 'config_file' in temp_config['PATHS']:
                     return temp_config['PATHS']['config_file']
             except yaml.YAMLError:
-                pass  # Handle invalid YAML
+                pass  
     return default_config_file
 
 def validate_config(config):
@@ -335,18 +318,16 @@ def load_config():
             "go_bin_dir": DEFAULT_GO_BIN_DIR,
             "python_dir": DEFAULT_PYTHON_INSTALL_DIR,
             "git_dir": DEFAULT_GIT_INSTALL_DIR,
-            "config_file": actual_config_file # Store the current config file path
+            "config_file": actual_config_file 
         }
-        save_config() # Ensure default config is written if not exists
+        save_config() 
     
-    # Ensure default installation directories exist
     os.makedirs(config["PATHS"]["install_dir"], exist_ok=True)
     os.makedirs(config["PATHS"]["python_dir"], exist_ok=True)
     os.makedirs(config["PATHS"]["git_dir"], exist_ok=True)
-    os.makedirs(DEFAULT_GO_WORKSPACE_DIR, exist_ok=True) # Ensure Go workspace exists
-    os.makedirs(config["PATHS"]["go_bin_dir"], exist_ok=True) # Ensure Go bin directory exists
+    os.makedirs(DEFAULT_GO_WORKSPACE_DIR, exist_ok=True) 
+    os.makedirs(config["PATHS"]["go_bin_dir"], exist_ok=True) 
     
-    # Ensure Poetry and Go binaries are in the current process's PATH if they exist
     poetry_bin_path = os.path.join(os.environ["HOME"], ".poetry", "bin")
     if os.path.exists(poetry_bin_path) and poetry_bin_path not in os.environ["PATH"]:
         os.environ["PATH"] = f"{poetry_bin_path}:{os.environ['PATH']}"
@@ -373,7 +354,6 @@ def _is_tool_installed(tool_name, tool_info):
         return True
     
     tool_type = tool_info["type"]
-    # If not in PATH, check for git repos
     if tool_type == "python_git":
         repo_path = os.path.join(config["PATHS"].get("python_dir", DEFAULT_PYTHON_INSTALL_DIR), tool_name)
         if os.path.exists(repo_path):
@@ -423,7 +403,7 @@ def install_dependencies():
                     logging.info(f"{Colors.BRIGHT_CYAN}Retrying dependency installation...{Colors.NC}")
                     subprocess.run(f"sudo {package_manager} install -y {deps[package_manager]}", shell=True, check=True, capture_output=True)
                 else:
-                    raise # Re-raise if it's a different error
+                    raise 
         elif package_manager == "yum":
             logging.info(f"{Colors.BRIGHT_CYAN}Installing dependencies...{Colors.NC}")
             subprocess.run(f"sudo {package_manager} install -y {deps[package_manager]}", shell=True, check=True, capture_output=True)
@@ -440,7 +420,7 @@ def install_dependencies():
         
         logging.info(f"{Colors.BRIGHT_GREEN}System dependencies installed successfully.{Colors.NC}\n")
 
-        return True, False # Success, installed now
+        return True, False 
     except subprocess.CalledProcessError as e:
         error_message = f"Error installing dependencies: {e}\nStderr: {e.stderr.decode()}"
         logging.error(f"{Colors.BOLD_RED}{error_message}{Colors.NC}")
@@ -479,18 +459,17 @@ def _add_go_env_to_shell_config(shell_config_path, goroot, gopath):
 def install_poetry():
     if shutil.which("poetry"):
         logging.info(f"{Colors.BRIGHT_GREEN}Poetry is already installed.{Colors.NC}\n")
-        return True, True # Success, already installed
+        return True, True 
     
     try:
         logging.info(f"{Colors.BRIGHT_CYAN}Installing Poetry...{Colors.NC}")
         subprocess.run("curl -sSL https://install.python-poetry.org | python3 -", shell=True, check=True, capture_output=True)
-        # Add Poetry's bin directory to the current process's PATH
         poetry_bin_path = os.path.join(os.environ["HOME"], ".poetry", "bin")
         if os.path.exists(poetry_bin_path) and poetry_bin_path not in os.environ["PATH"]:
             os.environ["PATH"] = f"{poetry_bin_path}:{os.environ['PATH']}"
             logging.debug(f"{Colors.BRIGHT_CYAN}Added {poetry_bin_path} to PATH for current process.{Colors.NC}")
         logging.info(f"{Colors.BRIGHT_GREEN}Poetry installed successfully.{Colors.NC}\n")
-        return True, False # Success, installed now
+        return True, False  
     except subprocess.CalledProcessError as e:
         error_message = f"Error installing Poetry: {e}\nStderr: {e.stderr.decode()}"
         logging.error(f"{Colors.BOLD_RED}{error_message}{Colors.NC}")
@@ -500,7 +479,7 @@ def install_poetry():
 def install_go():
     if shutil.which("go"):
         logging.info(f"{Colors.BRIGHT_GREEN}Go is already installed.{Colors.NC}\n")
-        return True, True # Success, already installed
+        return True, True  
 
     try:
         try:
@@ -554,17 +533,13 @@ def install_go():
         logging.info(f"{Colors.BRIGHT_CYAN}Installing Go...{Colors.NC}\n")
         go_install_dir = os.path.join(os.environ["HOME"], ".huntools", "go")
         
-        # Remove old Go installation from the user-specific path (if any)
-        # This should happen BEFORE creating the directory for the new installation
         subprocess.run(["rm", "-rf", go_install_dir], check=True, capture_output=True)
         
-        os.makedirs(go_install_dir, exist_ok=True) # This creates the directory
+        os.makedirs(go_install_dir, exist_ok=True)  
         
-        # Extract Go into the user-specific path
         subprocess.run(["tar", "-C", go_install_dir, "-xzf", go_tar_path], check=True, capture_output=True)
         os.remove(go_tar_path)
 
-        # After extraction, Go binaries are typically in a 'go' subdirectory within the install_dir
         goroot = os.path.join(go_install_dir, "go")
         gopath = DEFAULT_GO_WORKSPACE_DIR
         
@@ -580,7 +555,6 @@ def install_go():
         # Note: for systems that use it for non-login shells
         _add_go_env_to_shell_config(os.path.join(os.environ["HOME"], ".profile"), goroot, gopath)
 
-        # Special note for fish shell users
         if "fish" in os.environ.get("SHELL", ""):
             logging.warning(f"{Colors.BRIGHT_YELLOW}Detected fish shell. Please manually add the following to your ~/.config/fish/config.fish:{Colors.NC}")
             logging.warning(f"{Colors.BRIGHT_YELLOW}  set -x GOROOT {goroot}{Colors.NC}")
@@ -590,7 +564,6 @@ def install_go():
 
         logging.info(f"{Colors.BRIGHT_GREEN}Go has been installed successfully.{Colors.NC}")
         
-        # Set environment variables for the current process
         os.environ["GOROOT"] = goroot
         os.environ["GOPATH"] = gopath
         os.environ["PATH"] = f"{gopath}/bin:{goroot}/bin:{os.environ['PATH']}"
@@ -599,7 +572,7 @@ def install_go():
         logging.debug(f"{Colors.BRIGHT_CYAN}PATH updated to: {os.environ['PATH']}{Colors.NC}")
 
         logging.warning(f"{Colors.BRIGHT_YELLOW}Please restart your shell or run 'source ~/.bashrc' to apply the changes.{Colors.NC}\n")
-        return True, False # Success, installed now
+        return True, False 
         
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
         error_message = f"Error installing Go: {e}"
@@ -641,7 +614,6 @@ def _install_tools(title, tools, install_function):
     fail_count = 0
     skipped_count = 0
 
-    # Limit concurrency to avoid resource contention, e.g., with 'go install'
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         future_to_tool = {executor.submit(_install_tool_worker, tool, ALL_TOOLS.get(tool, {}), install_function): tool for tool in tools}
         for future in concurrent.futures.as_completed(future_to_tool):
@@ -789,7 +761,6 @@ def install_git_repos():
     return fail_count == 0
 
 def get_install_path():
-    # Prefer /usr/local/bin, but fall back to other common paths
     common_paths = ["/usr/local/bin", "/usr/bin"]
     path_dirs = os.environ.get("PATH", "").split(os.pathsep)
 
@@ -797,13 +768,11 @@ def get_install_path():
         if path in path_dirs and os.path.isdir(path):
             return path
     
-    # If no preferred path is found, return a default
     return "/usr/local/bin"
 
 def install_system():
     logging.info(f"{Colors.BOLD_MAGENTA}--- Installing huntools to the system ---{Colors.NC}")
     try:
-        # Save the git repo path to the config
         git_repo_path = os.getcwd()
         config["PATHS"]["git_repo_path"] = git_repo_path
         save_config()
@@ -837,9 +806,9 @@ def install_system():
         logging.error(f"{Colors.BOLD_RED}An unexpected error occurred: {e}{Colors.NC}")
 
 def install_all():
-    logging.info(f"{Colors.BOLD_MAGENTA}==========================================={Colors.NC}")
-    logging.info(f"{Colors.BOLD_MAGENTA}--- Starting Full Installation of Huntools ---{Colors.NC}")
-    logging.info(f"{Colors.BOLD_MAGENTA}==========================================={Colors.NC}\n")
+    print(f"{Colors.BOLD_MAGENTA}==========================================={Colors.NC}")
+    print(f"{Colors.BOLD_MAGENTA}--- Starting Full Installation of Huntools ---{Colors.NC}")
+    print(f"{Colors.BOLD_MAGENTA}==========================================={Colors.NC}\n")
 
     dependencies_status = False
     go_status = False
@@ -852,68 +821,67 @@ def install_all():
     if deps_success:
         dependencies_status = True
         if deps_already_installed:
-            logging.info(f"{Colors.BOLD_MAGENTA}--- Step 1/7: System Dependencies Already Installed ---{Colors.NC}\n")
+            logging.info(f"{Colors.BOLD_MAGENTA}--- 1/7: System Dependencies Already Installed ---{Colors.NC}\n")
         else:
-            logging.info(f"{Colors.BOLD_MAGENTA}--- Step 1/7: Installing System Dependencies ---{Colors.NC}\n")
+            logging.info(f"{Colors.BOLD_MAGENTA}--- 1/7: Installing System Dependencies ---{Colors.NC}\n")
     else:
         logging.error(f"{Colors.BOLD_RED}Installation aborted due to an error during dependency installation.{Colors.NC}")
-        logging.error(f"{Colors.BOLD_RED}--- Step 1/7: System Dependencies Installation Failed ---{Colors.NC}\n")
+        logging.error(f"{Colors.BOLD_RED}--- 1/7: System Dependencies Installation Failed ---{Colors.NC}\n")
 
     poetry_success, poetry_already_installed = install_poetry()
     if poetry_success:
-        logging.info(f"{Colors.BOLD_MAGENTA}--- Step 2/7: Poetry {'Already Installed' if poetry_already_installed else 'Installed'} ---{Colors.NC}\n")
+        logging.info(f"{Colors.BOLD_MAGENTA}--- 2/7: Poetry {'Already Installed' if poetry_already_installed else 'Installed'} ---{Colors.NC}\n")
     else:
         logging.error(f"{Colors.BOLD_RED}Installation aborted due to an error during Poetry installation.{Colors.NC}")
-        logging.error(f"{Colors.BOLD_RED}--- Step 2/7: Poetry Installation Failed ---{Colors.NC}\n")
+        logging.error(f"{Colors.BOLD_RED}--- 2/7: Poetry Installation Failed ---{Colors.NC}\n")
 
     go_success, go_already_installed = install_go()
     if go_success:
         go_status = True
         if go_already_installed:
-            logging.info(f"{Colors.BOLD_MAGENTA}--- Step 3/7: Go Already Installed ---{Colors.NC}\n")
+            logging.info(f"{Colors.BOLD_MAGENTA}--- 3/7: Go Already Installed ---{Colors.NC}\n")
         else:
-            logging.info(f"{Colors.BOLD_MAGENTA}--- Step 3/7: Installing Go ---{Colors.NC}\n")
+            logging.info(f"{Colors.BOLD_MAGENTA}--- 3/7: Installing Go ---{Colors.NC}\n")
     else:
         logging.error(f"{Colors.BOLD_RED}Installation aborted due to an error during Go installation.{Colors.NC}")
         logging.error(f"{Colors.BOLD_RED}--- Step 3/7: Go Installation Failed ---{Colors.NC}\n")
 
-    logging.info(f"{Colors.BOLD_MAGENTA}--- Step 3/6: Installing Go Tools ---{Colors.NC}")
+    logging.info(f"{Colors.BOLD_MAGENTA}--- 3/6: Installing Go Tools ---{Colors.NC}")
     if install_go_tools():
         go_tools_status = True
-        logging.info(f"{Colors.BOLD_MAGENTA}--- Step 3/6: Go Tools Installation Attempted ---{Colors.NC}\n")
+        logging.info(f"{Colors.BOLD_MAGENTA}--- 3/6: Go Tools Installation Attempted ---{Colors.NC}\n")
     else:
         logging.warning(f"{Colors.BRIGHT_YELLOW}Some Go tools failed to install. Continuing with the rest of the installation...{Colors.NC}")
-        logging.error(f"{Colors.BOLD_RED}--- Step 3/6: Go Tools Installation Failed ---{Colors.NC}\n")
+        logging.error(f"{Colors.BOLD_RED}--- 3/6: Go Tools Installation Failed ---{Colors.NC}\n")
 
-    logging.info(f"{Colors.BOLD_MAGENTA}--- Step 4/6: Installing System Packages ---{Colors.NC}")
+    logging.info(f"{Colors.BOLD_MAGENTA}--- 4/6: Installing System Packages ---{Colors.NC}")
     if install_packages():
         packages_status = True
-        logging.info(f"{Colors.BOLD_MAGENTA}--- Step 4/6: System Packages Installation Attempted ---{Colors.NC}\n")
+        logging.info(f"{Colors.BOLD_MAGENTA}--- 4/6: System Packages Installation Attempted ---{Colors.NC}\n")
     else:
         logging.warning(f"{Colors.BRIGHT_YELLOW}Some packages failed to install. Continuing with the rest of the installation...{Colors.NC}")
-        logging.error(f"{Colors.BOLD_RED}--- Step 4/6: System Packages Installation Failed ---{Colors.NC}\n")
+        logging.error(f"{Colors.BOLD_RED}--- 4/6: System Packages Installation Failed ---{Colors.NC}\n")
 
-    logging.info(f"{Colors.BOLD_MAGENTA}--- Step 5/6: Installing Python Tools ---{Colors.NC}")
+    logging.info(f"{Colors.BOLD_MAGENTA}--- 5/6: Installing Python Tools ---{Colors.NC}")
     if install_python_tools():
         python_tools_status = True
-        logging.info(f"{Colors.BOLD_MAGENTA}--- Step 5/6: Python Tools Installation Attempted ---{Colors.NC}\n")
+        logging.info(f"{Colors.BOLD_MAGENTA}--- 5/6: Python Tools Installation Attempted ---{Colors.NC}\n")
     else:
         logging.warning(f"{Colors.BRIGHT_YELLOW}Some Python tools failed to install. Continuing with the rest of the installation...{Colors.NC}")
-        logging.error(f"{Colors.BOLD_RED}--- Step 5/6: Python Tools Installation Failed ---{Colors.NC}\n")
+        logging.error(f"{Colors.BOLD_RED}--- 5/6: Python Tools Installation Failed ---{Colors.NC}\n")
 
-    logging.info(f"{Colors.BOLD_MAGENTA}--- Step 6/6: Cloning Git Repositories ---{Colors.NC}")
+    logging.info(f"{Colors.BOLD_MAGENTA}--- 6/6: Cloning Git Repositories ---{Colors.NC}")
     if install_git_repos():
         git_repos_status = True
-        logging.info(f"{Colors.BOLD_MAGENTA}--- Step 6/6: Git Repositories Cloning Attempted ---{Colors.NC}\n")
+        logging.info(f"{Colors.BOLD_MAGENTA}--- 6/6: Git Repositories Cloning Attempted ---{Colors.NC}\n")
     else:
         logging.warning(f"{Colors.BRIGHT_YELLOW}Some Git repositories failed to clone. Continuing with the rest of the installation...{Colors.NC}")
-        logging.error(f"{Colors.BOLD_RED}--- Step 6/6: Git Repositories Cloning Failed ---{Colors.NC}\n")
+        logging.error(f"{Colors.BOLD_RED}--- 6/6: Git Repositories Cloning Failed ---{Colors.NC}\n")
 
-    logging.info(f"{Colors.BOLD_MAGENTA}====================================={Colors.NC}")
-    logging.info(f"{Colors.BOLD_MAGENTA}--- Huntools installation complete! ---{Colors.NC}")
-    logging.info(f"{Colors.BOLD_MAGENTA}====================================={Colors.NC}")
+    print(f"{Colors.BOLD_MAGENTA}====================================={Colors.NC}")
+    print(f"{Colors.BOLD_MAGENTA}--- Huntools installation complete! ---{Colors.NC}")
+    print(f"{Colors.BOLD_MAGENTA}====================================={Colors.NC}")
 
-    # Summary Log
     summary_log = []
     summary_log.append(f"\n{Colors.BOLD_MAGENTA}--- Installation Summary ---{Colors.NC}")
     if dependencies_status:
@@ -953,19 +921,14 @@ def install_all():
 
     summary_log.append(f"{Colors.BOLD_MAGENTA}====================================={Colors.NC}")
 
-    # Print summary to console
     for line in summary_log:
         logging.info(line)
 
-    # Write summary to logs.txt
     with open("logs.txt", "w") as f:
-        # Remove ANSI escape codes for the log file
         clean_summary = [re.sub(r'\x1b\[([0-9]{1,2};)?([0-9]{1,2})?m', '', line) for line in summary_log]
         f.write("\n".join(clean_summary))
     
-    # Also log the summary to errors.log for comprehensive error reporting
     logging.error("\n".join(clean_summary))
-
     logging.info(f"{Colors.BRIGHT_GREEN}Installation summary written to logs.txt{Colors.NC}")
 
 def install_single(tool_name):
@@ -974,7 +937,6 @@ def install_single(tool_name):
 def install_multiple(tools_str):
     logging.info(f"{Colors.BOLD_MAGENTA}--- Installing multiple tools ---{Colors.NC}")
     
-    # Ensure system dependencies are installed first
     deps_success, deps_already_installed = install_dependencies()
     if not deps_success:
         logging.error(f"{Colors.BOLD_RED}System dependency installation failed. Aborting tool installation.{Colors.NC}")
@@ -982,7 +944,6 @@ def install_multiple(tools_str):
     if not deps_already_installed:
         logging.info(f"{Colors.BRIGHT_CYAN}--- 🔧 Installing system dependencies ---{Colors.NC}")
 
-    # Ensure Poetry is installed
     poetry_success, poetry_already_installed = install_poetry()
     if not poetry_success:
         logging.error(f"{Colors.BOLD_RED}Poetry installation failed. Aborting tool installation.{Colors.NC}")
@@ -992,7 +953,6 @@ def install_multiple(tools_str):
 
     tool_names = [tool.strip() for tool in tools_str.split(',')]
 
-    # Check if any Go tools are being installed and install Go if necessary
     needs_go_installation = False
     for tool_name in tool_names:
         tool_name_lower = tool_name.lower()
@@ -1006,7 +966,6 @@ def install_multiple(tools_str):
         go_success, go_already_installed = install_go()
         if not go_success:
             logging.error(f"{Colors.BOLD_RED}Go installation failed. Aborting Go tool installation.{Colors.NC}")
-            # Filter out Go tools from the list if Go installation failed
             tool_names = [name for name in tool_names if ALL_TOOLS.get(ALL_TOOLS_LOWER_MAP.get(name.lower()), {}).get("type") != "go"]
             if not tool_names:  
                 return
@@ -1109,7 +1068,6 @@ def display_all(output_format="text"):
         row_tools = all_tools[i:i + num_columns]
         row_output_parts = []
         for tool in row_tools:
-            # Check if the tool is installed to color it green, otherwise magenta
             if _is_tool_installed(tool, ALL_TOOLS[tool]):
                 row_output_parts.append(f"{Colors.BRIGHT_GREEN}- {tool:<{max_len}}{Colors.NC}")
             else:
@@ -1118,7 +1076,7 @@ def display_all(output_format="text"):
         print((" " * min_column_spacing).join(row_output_parts))
 
 def checking_health():
-    logging.info(f"{Colors.BOLD_MAGENTA}--- Performing health check on all tools ---{Colors.NC}")
+    logging.info(f"{Colors.BOLD_MAGENTA}--- Running health check  ---{Colors.NC}")
     all_tool_names = sorted(ALL_TOOLS.keys())
     installed_count = 0
     total_tools = len(all_tool_names)
@@ -1131,43 +1089,43 @@ def checking_health():
         
         tool_path = shutil.which(tool_name) or shutil.which(tool_name.lower())
         if tool_path:
-            logging.info(f"  {Colors.BRIGHT_GREEN}✔ {tool_name}:{Colors.NC} Installed ({Colors.BRIGHT_YELLOW}{tool_path}{Colors.NC})")
+            logging.info(f" {Colors.BRIGHT_GREEN}✔ {tool_name}:{Colors.NC} Installed ({Colors.BRIGHT_YELLOW}{tool_path}{Colors.NC})")
             is_installed = True
         
         elif tool_type == "python_git":
             repo_path = os.path.join(config["PATHS"].get("python_dir", DEFAULT_PYTHON_INSTALL_DIR), tool_name)
             if os.path.exists(repo_path):
-                logging.info(f"  {Colors.BRIGHT_GREEN}✔ {tool_name}:{Colors.NC} Installed {Colors.NC}{Colors.BRIGHT_GREEN}(Python Git Repo){Colors.NC} ({Colors.BRIGHT_YELLOW}{repo_path}{Colors.NC})")
+                logging.info(f" {Colors.BRIGHT_GREEN}✔ {tool_name}:{Colors.NC} Installed {Colors.NC}{Colors.BRIGHT_GREEN}(Python Git Repo){Colors.NC} ({Colors.BRIGHT_YELLOW}{repo_path}{Colors.NC})")
                 is_installed = True
         
         elif tool_type == "git":
             repo_path = os.path.join(config["PATHS"].get("git_dir", DEFAULT_GIT_INSTALL_DIR), tool_name)
             if os.path.exists(repo_path):
-                logging.info(f"  {Colors.BRIGHT_GREEN}✔ {tool_name}:{Colors.NC} Installed {Colors.BRIGHT_GREEN}(Git Repo) {Colors.NC}({Colors.BRIGHT_YELLOW}{repo_path}{Colors.NC})")
+                logging.info(f" {Colors.BRIGHT_GREEN}✔ {tool_name}:{Colors.NC} Installed {Colors.BRIGHT_GREEN}(Git Repo) {Colors.NC}({Colors.BRIGHT_YELLOW}{repo_path}{Colors.NC})")
                 is_installed = True
         elif tool_type == "go":
             go_bin_dir = config["PATHS"].get("go_bin_dir", DEFAULT_GO_BIN_DIR)
             huntools_go_bin_dir = os.path.join(os.environ["HOME"], ".huntools", "go")
             if os.path.exists(os.path.join(go_bin_dir, tool_name.lower())):
-                logging.info(f"  {Colors.BRIGHT_GREEN}✔ {tool_name}:{Colors.NC} Installed ({Colors.BRIGHT_YELLOW}{os.path.join(go_bin_dir, tool_name.lower())}{Colors.NC})")
+                logging.info(f" {Colors.BRIGHT_GREEN}✔ {tool_name}:{Colors.NC} Installed ({Colors.BRIGHT_YELLOW}{os.path.join(go_bin_dir, tool_name.lower())}{Colors.NC})")
                 is_installed = True
             elif os.path.exists(os.path.join(huntools_go_bin_dir, tool_name.lower())):
-                logging.info(f"  {Colors.BRIGHT_GREEN}✔ {tool_name}:{Colors.NC} Installed ({Colors.BRIGHT_YELLOW}{os.path.join(huntools_go_bin_dir, tool_name.lower())}{Colors.NC})")
+                logging.info(f" {Colors.BRIGHT_GREEN}✔ {tool_name}:{Colors.NC} Installed ({Colors.BRIGHT_YELLOW}{os.path.join(huntools_go_bin_dir, tool_name.lower())}{Colors.NC})")
                 is_installed = True
 
         if is_installed:
             installed_count += 1
         else:
-            logging.error(f"  {Colors.BOLD_RED}✖ {tool_name}:{Colors.NC} {Colors.BOLD_RED}Not Found{Colors.NC}")
+            logging.error(f" {Colors.BOLD_RED}✖ {tool_name}:{Colors.NC} {Colors.BOLD_RED}Not Found{Colors.NC}")
     
-    logging.info(f"{Colors.BOLD_MAGENTA}--- Health Check Summary ---{Colors.NC}")
+    print(f"{Colors.BOLD_MAGENTA}--- Health Check Summary ---{Colors.NC}")
     logging.info(f"Total tools: {total_tools}")
     logging.info(f"Installed: {Colors.BRIGHT_GREEN}{installed_count}{Colors.NC}")
     logging.info(f"Not Installed: {Colors.BOLD_RED}{total_tools - installed_count}{Colors.NC}")
     logging.info(f"{Colors.BOLD_MAGENTA}Overall Status: {Colors.BRIGHT_GREEN if installed_count == total_tools else Colors.BOLD_RED}{installed_count}/{total_tools} tools installed{Colors.NC}")
 
 def update_single(tool_name):
-    logging.info(f"{Colors.BOLD_MAGENTA}--- Updating single tool: {tool_name} ---{Colors.NC}")
+    print(f"{Colors.BOLD_MAGENTA}--- Updating single tool: {tool_name} ---{Colors.NC}")
 
     tool_name_lower = tool_name.lower()
     if tool_name_lower not in ALL_TOOLS_LOWER_MAP:
@@ -1230,7 +1188,7 @@ def update_single(tool_name):
     except Exception as e:
         logging.error(f"{Colors.BOLD_RED}An unexpected error occurred while updating {actual_tool_name}: {e}{Colors.NC}")
 def update_all():
-    logging.info(f"{Colors.BOLD_MAGENTA}--- Updating all tools ---{Colors.NC}")
+    print(f"{Colors.BOLD_MAGENTA}--- Updating all tools ---{Colors.NC}")
     
     package_manager = get_package_manager()
     package_tools = [name for name, tool in ALL_TOOLS.items() if tool["type"] == "package"]
@@ -1299,7 +1257,7 @@ def update_all():
         except Exception as e:
             logging.error(f"{Colors.BOLD_RED}An unexpected error occurred while updating {tool_name}: {e}{Colors.NC}")
     
-    logging.info(f"{Colors.BOLD_MAGENTA}--- All tools update process completed ---{Colors.NC}")
+    print(f"{Colors.BOLD_MAGENTA}--- All tools update process completed ---{Colors.NC}")
 
 def get_tool_location_and_command(tool_name, tool_info):
     tool_type = tool_info["type"]
@@ -1456,7 +1414,6 @@ def get_installed_tools_count():
     for tool_name, tool_info in ALL_TOOLS.items():
         is_installed = False
         
-        # Check if the tool is in the PATH
         tool_path = shutil.which(tool_name)
         if tool_path:
             is_installed = True
@@ -1745,7 +1702,6 @@ class CustomHelpFormatter(argparse.HelpFormatter):
         return f"{Colors.BOLD_MAGENTA}{text}{Colors.NC}\n"
 
 
-# Main function to parse arguments and execute commands 
 def main():
     try:
         load_config()
@@ -1877,7 +1833,6 @@ def main():
             parser.print_help()
             sys.exit(1)
 
-        # Manual validation for -f option
         if hasattr(args, 'output_format') and args.output_format not in ["text", "json"]:
             logging.error(f"Error: Invalid output format '{args.output_format}'. Choose from 'text' or 'json'.")
             sys.exit(1)
