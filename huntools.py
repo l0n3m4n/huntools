@@ -1119,10 +1119,10 @@ def checking_health():
             logging.error(f" {Colors.BOLD_RED}✖ {tool_name}:{Colors.NC} {Colors.BOLD_RED}Not Found{Colors.NC}")
     
     print(f"{Colors.BOLD_MAGENTA}--- Health Check Summary ---{Colors.NC}")
-    logging.info(f"Total tools: {total_tools}")
-    logging.info(f"Installed: {Colors.BRIGHT_GREEN}{installed_count}{Colors.NC}")
-    logging.info(f"Not Installed: {Colors.BOLD_RED}{total_tools - installed_count}{Colors.NC}")
-    logging.info(f"{Colors.BOLD_MAGENTA}Overall Status: {Colors.BRIGHT_GREEN if installed_count == total_tools else Colors.BOLD_RED}{installed_count}/{total_tools} tools installed{Colors.NC}")
+    print(f"Total tools: {Colors.BRIGHT_CYAN}{total_tools}{Colors.NC}")
+    print(f"Installed: {Colors.BRIGHT_GREEN}{installed_count}{Colors.NC}")
+    print(f"Not Installed: {Colors.BOLD_RED}{total_tools - installed_count}{Colors.NC}")
+    print(f"{Colors.BOLD_MAGENTA}Overall Status: {Colors.BRIGHT_GREEN if installed_count == total_tools else Colors.BOLD_RED}{installed_count}/{total_tools} tools installed{Colors.NC}")
 
 def update_single(tool_name):
     print(f"{Colors.BOLD_MAGENTA}--- Updating single tool: {tool_name} ---{Colors.NC}")
