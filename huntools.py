@@ -153,7 +153,7 @@ ALL_TOOLS = {
     "katana": {"type": "go", "install": "go install -v github.com/projectdiscovery/katana/cmd/katana@latest"},
     "subfinder": {"type": "go", "install": "go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest"},
     "assetfinder": {"type": "go", "install": "go install -v github.com/tomnomnom/assetfinder@latest"},
-    "aquatone": {"type": "go", "install": "go install -v github.com/michenriksen/aquatone@latest"},
+    "aquatone": {"type": "go", "install": "install_dir=$HOME/go/bin; tmp_dir=$(mktemp -d); wget https://github.com/michenriksen/aquatone/releases/download/v1.7.0/aquatone_linux_amd64_1.7.0.zip -O $tmp_dir/aquatone.zip && unzip -o $tmp_dir/aquatone.zip -d $tmp_dir && mv $tmp_dir/aquatone $install_dir/ && rm -rf $tmp_dir"},
     "gau": {"type": "go", "install": "go install -v github.com/lc/gau/v2/cmd/gau@latest"},
     "waybackurls": {"type": "go", "install": "go install -v github.com/tomnomnom/waybackurls@latest"},
     "Amass": {"type": "go", "install": "go install -v github.com/owasp-amass/amass/v4/cmd/amass@latest"},
@@ -169,7 +169,6 @@ ALL_TOOLS = {
     "github-subdomains": {"type": "go", "install": "go install -v github.com/gwen001/github-subdomains@latest"},
     "anew": {"type": "go", "install": "go install -v github.com/tomnomnom/anew@latest"},
     "notify": {"type": "go", "install": "go install -v github.com/projectdiscovery/notify/cmd/notify@latest"},
-    "unfurl": {"type": "go", "install": "go install -v github.com/tomnomnom/unfurl@v0.3.0"},
     "github-endpoints": {"type": "go", "install": "go install -v github.com/gwen001/github-endpoints@latest"},
     "subjs": {"type": "go", "install": "go install -v github.com/lc/subjs@latest"},
     "Gxss": {"type": "go", "install": "go install -v github.com/KathanP19/Gxss@latest"},
@@ -207,9 +206,9 @@ ALL_TOOLS = {
     "misconfig-mapper": {"type": "go", "install": "go install github.com/intigriti/misconfig-mapper/cmd/misconfig-mapper@latest"},
     "gitleaks": {"type": "go", "install": "go install -v github.com/zricethezav/gitleaks/v8@latest"},
     "trufflehog": {"type": "go", "install": "rm -rf /tmp/trufflehog && git clone https://github.com/trufflesecurity/trufflehog.git /tmp/trufflehog && cd /tmp/trufflehog && make && mv /tmp/trufflehog/bin/trufflehog $HOME/.huntools/go", "size": "large"}, # NOTE: manual installation large size 
-    "massdns": {"type": "go", "install": "rm -rf /tmp/massdns && git clone https://github.com/blechschmidt/massdns.git /tmp/massdns && cd /tmp/massdns && make && mv /tmp/massdns/bin/massdns $HOME/.huntools/go/"},
+    "massdns": {"type": "go", "install": "rm -rf /tmp/massdns && git clone https://github.com/blechschmidt/massdns.git /tmp/massdns && cd /tmp/massdns && make && mv /tmp/massdns/bin/massdns $HOME/go/bin"},
     "feroxbuster": {"type": "go", "install": "curl -sL https://raw.githubusercontent.com/epi052/feroxbuster/main/install-nix.sh | bash -s -- $HOME/.huntools/go"},
-    "unfurl": {"type": "go", "install": "go -v install github.com/tomnomnom/unfurl@latest"},
+    "unfurl": {"type": "go", "install": "go install -v github.com/tomnomnom/unfurl@latest"},
     "subzy": {"type": "go", "install": "go install -v github.com/PentestPad/subzy@latest"},
     "qsreplace": {"type": "go", "install": "go install -v github.com/tomnomnom/qsreplace@latest"}, 
     "vulnx": {"type": "go", "install": "go install -v github.com/projectdiscovery/cvemap/cmd/vulnx@latest"},
@@ -383,8 +382,8 @@ def install_dependencies():
         return False, False
 
     deps = {
-        "apt-get": "python3 python3-pip python3-venv git ruby build-essential gcc cmake libpcap-dev dnsutils libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev python3-setuptools rustc cargo",
-        "yum": "python3 python3-pip python3-devel git ruby gcc gcc-c++ make cmake pcap-devel dnsutils openssl-devel libffi-devel libxml2-devel libxslt-devel zlib-devel python3-setuptools rust cargo",
+        "apt-get": "python3 python3-pip python3-venv git ruby build-essential gcc cmake libpcap-dev dnsutils libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev python3-setuptools rustc cargo unzip",
+        "yum": "python3 python3-pip python3-devel git ruby gcc gcc-c++ make cmake pcap-devel dnsutils openssl-devel libffi-devel libxml2-devel libxslt-devel zlib-devel python3-setuptools rust cargo unzip",
         "pacman": "python python-pip python-virtualenv git ruby base-devel gcc cmake libpcap dnsutils openssl libffi libxml2 libxslt zlib python-setuptools rust",
         "brew": "python git curl wget ruby nmap cmake rust"
     }
