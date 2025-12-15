@@ -477,9 +477,25 @@ def install_poetry():
 
 
 def install_go():
+    min_go_version_str = "1.24" 
+    min_go_version_float = float(min_go_version_str)
+
     if shutil.which("go"):
-        logging.info(f"{Colors.BRIGHT_GREEN}Go is already installed.{Colors.NC}\n")
-        return True, True  
+        try:
+            result = subprocess.run(["go", "version"], capture_output=True, text=True, check=True)
+            match = re.search(r"go(\d+\.\d+)", result.stdout)
+            if match:
+                installed_version_str = match.group(1)
+                installed_version_float = float(installed_version_str)
+                if installed_version_float >= min_go_version_float:
+                    logging.info(f"{Colors.BRIGHT_GREEN}Go version {installed_version_str} is already installed and meets the minimum requirement ({min_go_version_str}).{Colors.NC}\n")
+                    return True, True
+                else:
+                    logging.warning(f"{Colors.BRIGHT_YELLOW}Go version {installed_version_str} is outdated (< {min_go_version_str}). Installing a newer version...{Colors.NC}\n")
+            else:
+                logging.warning(f"{Colors.BRIGHT_YELLOW}Could not determine Go version from output: '{result.stdout}'. Proceeding with installation...{Colors.NC}\n")
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            logging.warning(f"{Colors.BRIGHT_YELLOW}Could not check Go version ({e}). Proceeding with installation...{Colors.NC}\n")
 
     try:
         try:
@@ -487,8 +503,9 @@ def install_go():
             version_res = subprocess.run(["curl", "-s", version_url], capture_output=True, text=True, check=True)
             version = version_res.stdout.splitlines()[0].strip()
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            logging.warning(f"{Colors.BRIGHT_YELLOW}Could not fetch latest Go version ({e}). Falling back to a default version.{Colors.NC}")
-            version = "go1.20.7"
+            fallback_version = "go1.24.0"
+            logging.warning(f"{Colors.BRIGHT_YELLOW}Could not fetch latest Go version ({e}). Falling back to a default version: {fallback_version}{Colors.NC}")
+            version = fallback_version
 
         arch = platform.machine()
         os_name = platform.system().lower()
