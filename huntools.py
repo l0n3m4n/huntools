@@ -246,10 +246,9 @@ ALL_TOOLS = {
     "seclists": {"type": "python_git", "url": "https://github.com/danielmiessler/SecLists.git", "size": "large"},  
     "xsser" : {"type": "python_git", "url": "https://github.com/epsylon/xsser.git"}, 
    
-    # Python Pip Tools
+    # Python Tools
     "censys": {"type": "python_git", "url": "https://github.com/censys/censys-python.git"},
     "shodan": {"type": "python_git", "url": "https://github.com/achillean/shodan-python.git"},
-    "wafw00f": {"type": "python_git", "url": "https://github.com/enablesecurity/wafw00f.git"},
     "commix": {"type": "python_git", "url": "https://github.com/commixproject/commix.git"},
     "urless": {"type": "python_git", "url": "https://github.com/xnl-h4ck3r/urless.git"},
     "xnLinkFinder": {"type": "python_git", "url": "https://github.com/xnl-h4ck3r/xnLinkFinder.git"},
@@ -261,6 +260,7 @@ ALL_TOOLS = {
     # pip install 
     "waymore": {"type": "pip", "install": "waymore"}, 
     "dirsearch": {"type": "pip", "install": "dirsearch"},
+    "wafw00f": {"type": "pip", "install": "wafw00f"},
 
     # Git Repos
     "crt-sh": {"type": "git", "url": "https://github.com/az7rb/crt.sh.git"},
