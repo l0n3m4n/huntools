@@ -213,6 +213,8 @@ ALL_TOOLS = {
     "subzy": {"type": "go", "install": "go install -v github.com/PentestPad/subzy@latest"},
     "qsreplace": {"type": "go", "install": "go install -v github.com/tomnomnom/qsreplace@latest"}, 
     "vulnx": {"type": "go", "install": "go install -v github.com/projectdiscovery/cvemap/cmd/vulnx@latest"},
+    "hakrawler": {"type": "go", "install": "go install -v github.com/hakluke/hakrawler@latest"},
+
 
     # system packages
     "jq": {"type": "package"}, 
