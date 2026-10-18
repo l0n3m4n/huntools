@@ -192,6 +192,7 @@ ALL_TOOLS = {
     "hakip2host": {"type": "go", "install": "go install -v github.com/hakluke/hakip2host@latest"},
     "mantra": {"type": "go", "install": "go install -v github.com/Brosck/mantra@latest"},
     "crt": {"type": "go", "install": "go install -v github.com/cemulus/crt@latest"},
+    "cert.sh": {"type": "go", "install": "go install -v github.com/az7rb/crt.sh/v3@latest"},
     "s3scanner": {"type": "go", "install": "go install -v github.com/sa7mon/s3scanner@latest"},
     "nmapurls": {"type": "go", "install": "go install -v github.com/sdcampbell/nmapurls@latest"},
     "shortscan": {"type": "go", "install": "go install -v github.com/bitquark/shortscan/cmd/shortscan@latest"},
